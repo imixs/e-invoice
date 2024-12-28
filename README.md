@@ -1,14 +1,27 @@
 # e-invoice
 
-Imixs e-invoice is a simple Java library to read and write e-invoice documents. The advantage of this library is that no dependencies to any other non-java standard package is needed. So this library can be integrated into any modern Java project to read and write a e-invoice file. 
+Imixs e-invoice is a lightweight and efficient Java library for processing e-invoices documents. The library stands out for its independence from external dependencies and seamlessly integrates into modern Java projects. It supports the major European e-invoice standards factur-x (CII) and UBL.
 
-The project supports `factur-x` (CII) and the `UBL` format. 
 
-**Note:** A this moment the library supports read and write for factur-x invoices. UBL can only be read. 
+## Key Features
+
+ - Native Java support, integration without external dependencies
+ - Support for e-invoice formats factur-x and UBL
+ - Simple and intuitive API for developers
+ - Open Source under MIT license
+
+## Use Cases
+
+The Imixs e-invoice library serves as a simple to use solution for parsing and writing XML e-invoice documents. 
+You can easily leverage the library for building automated invoice processing systems and implementing export functions for standardized electronic invoices. Its support for multiple e-invoice formats makes it easy to use for projects involving automated processing and format migration, helping businesses adapt to different trading partner requirements.
+
+## Technical Details
+
+The library focuses on XML processing of e-invoices. For ZUGFERD-compliant PDF documents, the generated XML must be manually embedded into the PDF file. Currently, reading and writing of factur-x invoices is fully supported, while UBL is only available in read mode.
 
 ## How to use: 
 
-To add this libray to your Maven project just add the following maven dependency:
+Integration into Maven projects is done by adding the following dependency:
 
 ```xml
     <dependency>
@@ -20,7 +33,7 @@ To add this libray to your Maven project just add the following maven dependency
 
 ## Examples
 
-### Parse & Read an E-Invoice document
+### Reading and Parsing an E-Invoice
 
 To read a XML File from an InputStream and parse it with the Imixs e-invoice library:
 
@@ -97,3 +110,10 @@ To create a new e-invoice document you can work with any valid e-invoice templat
     byte[] myEInvoice=model.getContent();
 
 ```
+
+
+## How to Join this Project
+
+We maintain Imixs e-invoice as an open source project on GitHub and welcome developers to join our community. Whether you want to fix bugs, add new features, or improve documentation - your contributions are valuable to us. You can start by forking the repository, creating issues for bug reports or feature requests, or submitting pull requests with your improvements. We actively review contributions and provides feedback to ensure high code quality. We follow standard GitHub workflows and maintain our codebase under the MIT license, making it easy for anyone to participate. If you're interested in contributing, check out our GitHub repository and feel free to reach out through issues or discussions. 
+
+We're particularly interested in contributions around UBL support, validation features, and performance optimizations.
