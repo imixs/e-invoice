@@ -112,6 +112,10 @@ To create a new e-invoice document you can work with any valid e-invoice templat
 ```
 
 
+You can use the [Online eInvoice Validator](https://www.itb.ec.europa.eu/invoice/upload) to test a e-invoice document. 
+
+
+
 ## How to Join this Project
 
 We maintain Imixs e-invoice as an open source project on GitHub and welcome developers to join our community. Whether you want to fix bugs, add new features, or improve documentation - your contributions are valuable to us. You can start by forking the repository, creating issues for bug reports or feature requests, or submitting pull requests with your improvements. We actively review contributions and provides feedback to ensure high code quality. We follow standard GitHub workflows and maintain our codebase under the MIT license, making it easy for anyone to participate. If you're interested in contributing, check out our GitHub repository and feel free to reach out through issues or discussions. 
