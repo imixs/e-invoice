@@ -1,31 +1,37 @@
-# e-invoice
+package org.imixs.einvoice;
 
-Imixs e-invoice is a simple Java library to read and write e-invoice documents. The advantage of this library is that no dependencies to any other non-java standard package is needed. So this library can be integrated into any modern Java project to read and write a e-invoice file. 
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
 
-The project supports `factur-x` (CII) and the `UBL` format. 
+import java.io.IOException;
+import java.io.InputStream;
+import java.math.BigDecimal;
+import java.time.LocalDate;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 
-**Note:** A this moment the library supports read and write for factur-x invoices. UBL can only be read. 
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
-## How to use: 
+/**
+ * This test class is testing the EInvoiceModel and tests different
+ * kind of files
+ * 
+ */
+class EInvoiceModelTest {
 
-To add this libray to your Maven project just add the following maven dependency:
+    @BeforeEach
+    public void setUp()  {
 
-```xml
-		<dependency>
-			<groupId>org.imixs.util</groupId>
-			<artifactId>imixs-e-invoice</artifactId>
-			<version>1.0.0-SNAPSHOT</version>
-		</dependency>
-```
+    }
 
-## Examples
-
-To read a XML File from an InputStream and parse it with the Imixs e-invoice library:
-
-```
+    @Test
+    void testStandaloneXML() throws IOException {
+        // Prepare test data
         EInvoiceModel eInvoiceModel =null;
         ClassLoader classLoader = getClass().getClassLoader();
-        try (InputStream is = myInputStream) {
+        try (InputStream is = classLoader.getResourceAsStream("e-invoice/Rechnung_R_00010.xml")) {
             if (is == null) {
                 throw new IOException("Resource not found" );
             }
@@ -50,8 +56,12 @@ To read a XML File from an InputStream and parse it with the Imixs e-invoice lib
         assertEquals("Max Mustermann", seller.getName());
         assertEquals("DE111111111", seller.getVatNumber());
 
+        TradeParty buyer = eInvoiceModel.findTradeParty("buyer");
+        assertNotNull(buyer);
+        assertEquals("Viborg Metall GbR", buyer.getName());
 
-```
+    }
 
-You can find the full example in the JUnit test package of this project. 
+  
 
+}
