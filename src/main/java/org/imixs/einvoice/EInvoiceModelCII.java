@@ -408,6 +408,19 @@ public class EInvoiceModelCII extends EInvoiceModel {
             amountElement.setTextContent(value.toPlainString());
         }
 
+        // In case we have no tax then this is also the value for TaxBasisTotalAmount
+        if (getTaxRate().doubleValue() == 0) {
+            updateElementValue(specifiedTradeSettlementHeaderMonetarySummation, EInvoiceNS.RAM, "LineTotalAmount",
+                    value.toPlainString());
+            updateElementValue(specifiedTradeSettlementHeaderMonetarySummation, EInvoiceNS.RAM, "TaxBasisTotalAmount",
+                    value.toPlainString());
+
+            // and also update LineTotalAmount and BasisAmount in ApplicableTradeTax
+            Element applicableTradeTax = findOrCreateChildNode(applicableHeaderTradeSettlement,
+                    EInvoiceNS.RAM, "ApplicableTradeTax");
+            updateElementValue(applicableTradeTax, EInvoiceNS.RAM, "BasisAmount", value.toPlainString());
+        }
+
     }
 
     /**
