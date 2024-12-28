@@ -1,9 +1,9 @@
 package org.imixs.einvoice;
 
 /**
- * A TradeParty is a container for a TradeParty element
+ * A TradeParty is a container for a TradeParty element.
  * 
- * @author rsoika
+ * @author rsoika 
  *
  */
 public class TradeLineItem {
@@ -14,7 +14,7 @@ public class TradeLineItem {
     private double grossPrice;
     private double netPrice;
     private double quantity;
-    private double vat;
+    private double taxRate;
     private double total;
 
     public TradeLineItem(String id) {
@@ -69,12 +69,12 @@ public class TradeLineItem {
         this.quantity = quantity;
     }
 
-    public double getVat() {
-        return vat;
+    public double getTaxRate() {
+        return taxRate;
     }
 
-    public void setVat(double vat) {
-        this.vat = vat;
+    public void setTaxRate(double taxRate) {
+        this.taxRate = taxRate;
     }
 
     public double getTotal() {
@@ -94,7 +94,7 @@ public class TradeLineItem {
                 ", grossPrice='" + grossPrice + '\'' +
                 ", netPrice='" + netPrice + '\'' +
                 ", quantity='" + quantity + '\'' +
-                ", vat='" + vat + '\'' +
+                ", taxRate='" + taxRate + '\'' +
                 ", total='" + total + '\'' +
                 '}';
     }

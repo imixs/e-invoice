@@ -10,7 +10,7 @@ import java.util.HashMap;
 import java.util.Iterator;
 import java.util.LinkedHashSet;
 import java.util.Map;
-import java.util.Set; 
+import java.util.Set;
 import java.util.logging.Logger;
 
 import javax.xml.transform.OutputKeys;
@@ -49,7 +49,7 @@ public abstract class EInvoiceModel {
     protected BigDecimal grandTotalAmount = new BigDecimal("0.00");
     protected BigDecimal taxTotalAmount = new BigDecimal("0.00");
     protected BigDecimal netTotalAmount = new BigDecimal("0.00");
-    protected BigDecimal vat = new BigDecimal("0.00");
+    protected BigDecimal taxRate = new BigDecimal("0.00");
     protected Set<TradeParty> tradeParties = null;
     protected Set<TradeLineItem> tradeLineItems = null;
 
@@ -129,12 +129,16 @@ public abstract class EInvoiceModel {
         setGrandTotalAmount(BigDecimal.valueOf(value));
     }
 
-    public BigDecimal getVat() {
-        return vat;
+    public BigDecimal getTaxRate() {
+        return taxRate;
     }
 
-    public void setVat(BigDecimal vat) {
-        this.vat = vat;
+    public void setTaxRate(BigDecimal value) {
+        this.taxRate = value;
+    }
+
+    public void setTaxRate(Double value) {
+        setTaxRate(BigDecimal.valueOf(value));
     }
 
     public BigDecimal getTaxTotalAmount() {

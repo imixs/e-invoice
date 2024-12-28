@@ -318,11 +318,12 @@ public class EInvoiceModelCII extends EInvoiceModel {
             // VAT and total
             Element settlement = findChildNode(lineItem, EInvoiceNS.RAM, "SpecifiedLineTradeSettlement");
             if (settlement != null) {
+
                 Element tax = findChildNode(settlement, EInvoiceNS.RAM, "ApplicableTradeTax");
                 if (tax != null) {
                     Element rate = findChildNode(tax, EInvoiceNS.RAM, "RateApplicablePercent");
                     if (rate != null) {
-                        item.setVat(Double.parseDouble(rate.getTextContent()));
+                        item.setTaxRate(Double.parseDouble(rate.getTextContent()));
                     }
                 }
 
@@ -425,6 +426,32 @@ public class EInvoiceModelCII extends EInvoiceModel {
         Element applicableTradeTax = findOrCreateChildNode(applicableHeaderTradeSettlement,
                 EInvoiceNS.RAM, "ApplicableTradeTax");
         updateElementValue(applicableTradeTax, EInvoiceNS.RAM, "CalculatedAmount", value.toPlainString());
+
+    }
+
+    /**
+     * Set ApplicableTradeTax and code
+     * 
+     * <ram:TypeCode>VAT</ram:TypeCode>
+     * <ram:CategoryCode>S</ram:CategoryCode>
+     * <ram:RateApplicablePercent>0.00</ram:RateApplicablePercent>
+     *
+     * If tax rate == 0 then teh code is 'Z' otherwise 'S'
+     */
+    @Override
+    public void setTaxRate(BigDecimal value) {
+        super.setTaxRate(value);
+
+        Element settlement = findOrCreateChildNode(applicableHeaderTradeSettlement, EInvoiceNS.RAM,
+                "ApplicableTradeTax");
+        Element cat = findOrCreateChildNode(settlement, EInvoiceNS.RAM, "CategoryCode");
+        Element tax = findOrCreateChildNode(settlement, EInvoiceNS.RAM, "RateApplicablePercent");
+        if (value.doubleValue() > 0) {
+            cat.setTextContent("S");
+        } else {
+            cat.setTextContent("Z");
+        }
+        tax.setTextContent(value.toPlainString());
 
     }
 
@@ -581,13 +608,18 @@ public class EInvoiceModelCII extends EInvoiceModel {
         delivery.appendChild(quantity);
 
         // Trade Settlement (VAT and Total)
+
         Element tax = getDoc().createElement(getPrefix(EInvoiceNS.RAM) + "ApplicableTradeTax");
         Element typeCode = getDoc().createElement(getPrefix(EInvoiceNS.RAM) + "TypeCode");
         typeCode.setTextContent("VAT");
         Element categoryCode = getDoc().createElement(getPrefix(EInvoiceNS.RAM) + "CategoryCode");
-        categoryCode.setTextContent("S");
+        if (item.getTaxRate() > 0) {
+            categoryCode.setTextContent("S");
+        } else {
+            categoryCode.setTextContent("Z");
+        }
         Element rate = getDoc().createElement(getPrefix(EInvoiceNS.RAM) + "RateApplicablePercent");
-        rate.setTextContent(String.valueOf(item.getVat()));
+        rate.setTextContent(String.valueOf(item.getTaxRate()));
         tax.appendChild(typeCode);
         tax.appendChild(categoryCode);
         tax.appendChild(rate);
