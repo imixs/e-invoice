@@ -27,7 +27,7 @@ Integration into Maven projects is done by adding the following dependency:
     <dependency>
         <groupId>org.imixs.util</groupId>
         <artifactId>imixs-e-invoice</artifactId>
-        <version>1.0.0-SNAPSHOT</version>
+        <version>1.0.0</version>
     </dependency>
 ```
 
