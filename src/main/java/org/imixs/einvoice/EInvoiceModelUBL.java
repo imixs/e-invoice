@@ -32,31 +32,49 @@ public class EInvoiceModelUBL extends EInvoiceModel {
      */
     @Override
     public void setNameSpaces() {
-
+        // Set default URIs and prefixes
         setUri(EInvoiceNS.CAC, "urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2");
         setUri(EInvoiceNS.CBC, "urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2");
 
+        // Set initial default prefixes
         setPrefix(EInvoiceNS.CAC, "cac");
         setPrefix(EInvoiceNS.CBC, "cbc");
 
-        // parse the UBL namespaces
-        NamedNodeMap defAttributes = getRoot().getAttributes();
-        for (int j = 0; j < defAttributes.getLength(); j++) {
-            Node node = defAttributes.item(j);
+        // Parse all namespaces from the root element
+        NamedNodeMap attributes = getRoot().getAttributes();
+        for (int i = 0; i < attributes.getLength(); i++) {
+            Node node = attributes.item(i);
+            String nodeName = node.getNodeName();
+            String nodeValue = node.getNodeValue();
 
-            if (getPrefix(EInvoiceNS.CBC).equals(node.getLocalName())
-                    && !getUri(EInvoiceNS.CBC).equals(node.getNodeValue())) {
-                logger.fine("...set CBC namespace URI: " + node.getNodeValue());
-                setUri(EInvoiceNS.CBC, node.getNodeValue());
-            }
-            if (getPrefix(EInvoiceNS.CAC).equals(node.getLocalName())
-                    && !getUri(EInvoiceNS.CAC).equals(node.getNodeValue())) {
-                logger.fine("...set CAC namespace URI: " + node.getNodeValue());
-                setUri(EInvoiceNS.CAC, node.getNodeValue());
+            // Handle both xmlns:prefix and xmlns declarations
+            String prefix = null;
+            if (nodeName.startsWith("xmlns:")) {
+                prefix = nodeName.substring(6); // remove "xmlns:"
+            } else if ("xmlns".equals(nodeName)) {
+                prefix = ""; // default namespace
             }
 
+            if (prefix != null) {
+                // Match by namespace URI
+                if (nodeValue.equals(getUri(EInvoiceNS.CAC))) {
+                    logger.fine("...set CAC namespace prefix: " + prefix);
+                    setPrefix(EInvoiceNS.CAC, prefix);
+                } else if (nodeValue.equals(getUri(EInvoiceNS.CBC))) {
+                    logger.fine("...set CBC namespace prefix: " + prefix);
+                    setPrefix(EInvoiceNS.CBC, prefix);
+                }
+                // Optional: store unknown namespaces for future reference
+                else {
+                    logger.fine("Found additional namespace - prefix: " + prefix + ", URI: " + nodeValue);
+                }
+            }
         }
 
+        // Validate that required namespaces were found
+        if (getPrefix(EInvoiceNS.CAC) == null || getPrefix(EInvoiceNS.CBC) == null) {
+            logger.warning("Required namespaces (CAC and/or CBC) not found in document!");
+        }
     }
 
     /**

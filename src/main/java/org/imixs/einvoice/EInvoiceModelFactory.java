@@ -65,47 +65,54 @@ public class EInvoiceModelFactory {
     public static EInvoiceModel read(InputStream is) throws FileNotFoundException {
         logger.fine("read from inputStream...");
         if (is == null) {
-            throw new NullPointerException(
-                    "Model can not be parsed: InputStream is null");
+            throw new NullPointerException("Model can not be parsed: InputStream is null");
         }
-        DocumentBuilderFactory docFactory = DocumentBuilderFactory
-                .newInstance();
-        docFactory.setIgnoringElementContentWhitespace(true); // because of a bug this does not have
-                                                              // any effect!
+
+        DocumentBuilderFactory docFactory = DocumentBuilderFactory.newInstance();
+        docFactory.setIgnoringElementContentWhitespace(true);
         docFactory.setNamespaceAware(true);
 
         try {
             if (is.available() == 0) {
-                logger.warning("Empty BPMN file - creating a default process");
-                throw new IOException(
-                        "Model can not be parsed: No Content");
+                logger.warning("Empty file!");
+                throw new IOException("Model can not be parsed: No Content");
             }
 
-            // parse XML file
             DocumentBuilder db = docFactory.newDocumentBuilder();
-            // read from a project's resources folder
             Document doc = db.parse(is);
             Element root = doc.getDocumentElement();
-
             EInvoiceModel model = null;
-            String rootName = root.getTagName();
-            if ("rsm:CrossIndustryInvoice".equals(rootName)) {
+
+            // Get local name without namespace prefix
+            String localName = root.getLocalName();
+            String namespaceURI = root.getNamespaceURI();
+
+            // Check for CII format
+            if ("CrossIndustryInvoice".equals(localName) &&
+                    "urn:un:unece:uncefact:data:standard:CrossIndustryInvoice:100".equals(namespaceURI)) {
                 model = new EInvoiceModelCII(doc);
-            } else {
+            }
+            // Check for UBL format
+            else if ("Invoice".equals(localName) &&
+                    namespaceURI != null &&
+                    namespaceURI.startsWith("urn:oasis:names:specification:ubl")) {
                 model = new EInvoiceModelUBL(doc);
+            } else {
+                throw new RuntimeException("Unsupported invoice format: " + localName +
+                        " (Namespace: " + namespaceURI + ")");
             }
 
             return model;
-        } catch (ParserConfigurationException | SAXException | IOException e) {
-            logger.severe(e.getMessage());
-            // create a runtimeException to show a error message in the client
-            throw new RuntimeException(e);
+
+        } catch (SAXException | IOException | ParserConfigurationException ex) {
+            logger.severe(ex.getMessage());
+            throw new RuntimeException(ex);
         } finally {
             if (is != null) {
                 try {
                     is.close();
-                } catch (IOException e) {
-                    e.printStackTrace();
+                } catch (IOException ex) {
+                    ex.printStackTrace();
                 }
             }
         }

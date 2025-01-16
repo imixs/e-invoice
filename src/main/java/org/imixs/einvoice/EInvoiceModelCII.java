@@ -43,47 +43,34 @@ public class EInvoiceModelCII extends EInvoiceModel {
      */
     @Override
     public void setNameSpaces() {
-        // setUri(EInvoiceNS.A,
-        // "urn:un:unece:uncefact:data:standard:QualifiedDataType:100");
+        // Standard namespaces
         setUri(EInvoiceNS.RSM, "urn:un:unece:uncefact:data:standard:CrossIndustryInvoice:100");
         setUri(EInvoiceNS.QDT, "urn:un:unece:uncefact:data:standard:QualifiedDataType:10");
         setUri(EInvoiceNS.RAM, "urn:un:unece:uncefact:data:standard:ReusableAggregateBusinessInformationEntity:100");
         setUri(EInvoiceNS.UDT, "urn:un:unece:uncefact:data:standard:UnqualifiedDataType:100");
 
-        // setPrefix(EInvoiceNS.A, "a");
+        // Standard prefixes
         setPrefix(EInvoiceNS.RSM, "rsm");
         setPrefix(EInvoiceNS.QDT, "qdt");
         setPrefix(EInvoiceNS.RAM, "ram");
         setPrefix(EInvoiceNS.UDT, "udt");
 
-        // parse the CII namespaces
+        // Parse the namespaces from root element
         NamedNodeMap defAttributes = getRoot().getAttributes();
         for (int j = 0; j < defAttributes.getLength(); j++) {
             Node node = defAttributes.item(j);
+            String localName = node.getLocalName();
+            String nodeValue = node.getNodeValue();
 
-            if (getPrefix(EInvoiceNS.RSM).equals(node.getLocalName())
-                    && !getUri(EInvoiceNS.RSM).equals(node.getNodeValue())) {
-                logger.fine("...set RSM namespace URI: " + node.getNodeValue());
-                setUri(EInvoiceNS.RSM, node.getNodeValue());
+            // Check for alternative namespace prefixes (mgns1, mgns2, mgns3)
+            if (nodeValue.equals(getUri(EInvoiceNS.RSM))) {
+                setPrefix(EInvoiceNS.RSM, localName.replace("xmlns:", ""));
+            } else if (nodeValue.equals(getUri(EInvoiceNS.RAM))) {
+                setPrefix(EInvoiceNS.RAM, localName.replace("xmlns:", ""));
+            } else if (nodeValue.equals(getUri(EInvoiceNS.UDT))) {
+                setPrefix(EInvoiceNS.UDT, localName.replace("xmlns:", ""));
             }
-            if (getPrefix(EInvoiceNS.QDT).equals(node.getLocalName())
-                    && !getUri(EInvoiceNS.QDT).equals(node.getNodeValue())) {
-                logger.fine("...set QDT namespace URI: " + node.getNodeValue());
-                setUri(EInvoiceNS.QDT, node.getNodeValue());
-            }
-            if (getPrefix(EInvoiceNS.RAM).equals(node.getLocalName())
-                    && !getUri(EInvoiceNS.RAM).equals(node.getNodeValue())) {
-                logger.fine("...set RAM namespace URI: " + node.getNodeValue());
-                setUri(EInvoiceNS.RAM, node.getNodeValue());
-            }
-            if (getPrefix(EInvoiceNS.UDT).equals(node.getLocalName())
-                    && !getUri(EInvoiceNS.UDT).equals(node.getNodeValue())) {
-                logger.fine("...set UDT namespace URI: " + node.getNodeValue());
-                setUri(EInvoiceNS.UDT, node.getNodeValue());
-            }
-
         }
-
     }
 
     /**
