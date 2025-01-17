@@ -2,6 +2,7 @@ package org.imixs.einvoice;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.fail;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -33,6 +34,8 @@ class EInvoiceModelTest {
                 throw new IOException("Resource not found");
             }
             eInvoiceModel = EInvoiceModelFactory.read(is);
+        } catch (EInvoiceFormatException e) {
+            fail(e);
         }
 
         // Verify the result
@@ -68,6 +71,8 @@ class EInvoiceModelTest {
                 throw new IOException("Resource not found");
             }
             eInvoiceModel = EInvoiceModelFactory.read(is);
+        } catch (EInvoiceFormatException e) {
+            fail(e);
         }
 
         // Verify the result
@@ -98,6 +103,8 @@ class EInvoiceModelTest {
                 throw new IOException("Resource not found");
             }
             eInvoiceModel = EInvoiceModelFactory.read(is);
+        } catch (EInvoiceFormatException e) {
+            fail(e);
         }
 
         // Verify the result

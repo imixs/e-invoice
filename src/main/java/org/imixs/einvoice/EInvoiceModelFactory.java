@@ -34,9 +34,10 @@ public class EInvoiceModelFactory {
      * @param modelFile
      * @return a EInvoiceModel instance
      * @throws FileNotFoundException
+     * @throws EInvoiceFormatException
      * 
      */
-    public static EInvoiceModel read(File modelFile) throws FileNotFoundException {
+    public static EInvoiceModel read(File modelFile) throws FileNotFoundException, EInvoiceFormatException {
         return read(new FileInputStream(modelFile));
     }
 
@@ -46,8 +47,9 @@ public class EInvoiceModelFactory {
      * @param modelFile
      * @return a EInvoiceModel instance
      * @throws FileNotFoundException
+     * @throws EInvoiceFormatException
      */
-    public static EInvoiceModel read(String modelFilePath) throws FileNotFoundException {
+    public static EInvoiceModel read(String modelFilePath) throws FileNotFoundException, EInvoiceFormatException {
         return read(EInvoiceModel.class.getResourceAsStream(modelFilePath));
     }
 
@@ -61,8 +63,9 @@ public class EInvoiceModelFactory {
      * @param modelFile
      * @return a EInvoiceModel instance
      * @throws FileNotFoundException
+     * @throws EInvoiceFormatException
      */
-    public static EInvoiceModel read(InputStream is) throws FileNotFoundException {
+    public static EInvoiceModel read(InputStream is) throws FileNotFoundException, EInvoiceFormatException {
         logger.fine("read from inputStream...");
         if (is == null) {
             throw new NullPointerException("Model can not be parsed: InputStream is null");
@@ -98,15 +101,14 @@ public class EInvoiceModelFactory {
                     namespaceURI.startsWith("urn:oasis:names:specification:ubl")) {
                 model = new EInvoiceModelUBL(doc);
             } else {
-                throw new RuntimeException("Unsupported invoice format: " + localName +
-                        " (Namespace: " + namespaceURI + ")");
+                throw new EInvoiceFormatException(localName, namespaceURI);
             }
 
             return model;
 
         } catch (SAXException | IOException | ParserConfigurationException ex) {
             logger.severe(ex.getMessage());
-            throw new RuntimeException(ex);
+            throw new EInvoiceFormatException("XML parsing error", ex.getMessage());
         } finally {
             if (is != null) {
                 try {
