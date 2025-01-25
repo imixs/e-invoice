@@ -3,9 +3,7 @@ package org.imixs.einvoice;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.math.BigDecimal;
-import java.security.SecureRandom;
 import java.time.LocalDate;
-import java.util.Base64;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.LinkedHashSet;
@@ -36,22 +34,19 @@ import org.w3c.dom.NodeList;
 public abstract class EInvoiceModel {
     protected static Logger logger = Logger.getLogger(EInvoiceModel.class.getName());
 
-    private static final SecureRandom random = new SecureRandom();
-    private static final Base64.Encoder encoder = Base64.getUrlEncoder().withoutPadding();
-
     private Document doc;
     private Element root;
     // elements
-    protected String id = null;
-    protected String buyerReference = null;
-    protected LocalDate issueDateTime = null;
-    protected LocalDate dueDateTime = null;
-    protected BigDecimal grandTotalAmount = new BigDecimal("0.00");
-    protected BigDecimal taxTotalAmount = new BigDecimal("0.00");
-    protected BigDecimal netTotalAmount = new BigDecimal("0.00");
-    protected BigDecimal taxRate = new BigDecimal("0.00");
-    protected Set<TradeParty> tradeParties = null;
-    protected Set<TradeLineItem> tradeLineItems = null;
+    private String id = null;
+    private String buyerReference = null;
+    private LocalDate issueDateTime = null;
+    private LocalDate dueDateTime = null;
+    private BigDecimal grandTotalAmount = new BigDecimal("0.00");
+    private BigDecimal taxTotalAmount = new BigDecimal("0.00");
+    private BigDecimal netTotalAmount = new BigDecimal("0.00");
+    private BigDecimal taxRate = new BigDecimal("0.00");
+    private Set<TradeParty> tradeParties = null;
+    private Set<TradeLineItem> tradeLineItems = null;
 
     private final Map<EInvoiceNS, String> URI_BY_NAMESPACE = new HashMap<>();
     private final Map<EInvoiceNS, String> PREFIX_BY_NAMESPACE = new HashMap<>();
@@ -219,6 +214,14 @@ public abstract class EInvoiceModel {
         }
         // not found
         return null;
+    }
+
+    public String getBuyerReference() {
+        return buyerReference;
+    }
+
+    public void setBuyerReference(String buyerReference) {
+        this.buyerReference = buyerReference;
     }
 
     /**

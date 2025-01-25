@@ -109,7 +109,7 @@ public class EInvoiceModelCII extends EInvoiceModel {
         // read invoice number
         element = findChildNode(exchangedDocument, EInvoiceNS.RAM, "ID");
         if (element != null) {
-            id = element.getTextContent();
+            setId(element.getTextContent());
         }
 
         // read Date time
@@ -120,7 +120,7 @@ public class EInvoiceModelCII extends EInvoiceModel {
                 String dateStr = dateTimeElement.getTextContent();
                 try {
                     DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyyMMdd");
-                    issueDateTime = LocalDate.parse(dateStr, formatter);
+                    setIssueDateTime(LocalDate.parse(dateStr, formatter));
                 } catch (DateTimeParseException e) {
                     // not parsable
                 }
@@ -132,13 +132,13 @@ public class EInvoiceModelCII extends EInvoiceModel {
         Element child = findChildNode(specifiedTradeSettlementHeaderMonetarySummation, EInvoiceNS.RAM,
                 "GrandTotalAmount");
         if (child != null) {
-            grandTotalAmount = new BigDecimal(child.getTextContent());
+            setGrandTotalAmount(new BigDecimal(child.getTextContent()));
         }
         child = findChildNode(specifiedTradeSettlementHeaderMonetarySummation, EInvoiceNS.RAM, "TaxTotalAmount");
         if (child != null) {
-            taxTotalAmount = new BigDecimal(child.getTextContent());
+            setTaxTotalAmount(new BigDecimal(child.getTextContent()));
         }
-        netTotalAmount = grandTotalAmount.subtract(taxTotalAmount).setScale(2, RoundingMode.HALF_UP);
+        setNetTotalAmount(getGrandTotalAmount().subtract(getTaxTotalAmount().setScale(2, RoundingMode.HALF_UP)));
 
         // due date
         Element specifiedTradePaymentTermsElement = findChildNode(element, EInvoiceNS.RAM,
@@ -153,7 +153,7 @@ public class EInvoiceModelCII extends EInvoiceModel {
                     String dateStr = dateTimeElementString.getTextContent();
                     try {
                         DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyyMMdd");
-                        dueDateTime = LocalDate.parse(dateStr, formatter);
+                        setDueDateTime(LocalDate.parse(dateStr, formatter));
                     } catch (DateTimeParseException e) {
                         // not parsable
                     }
@@ -165,23 +165,23 @@ public class EInvoiceModelCII extends EInvoiceModel {
         Element buyerReferenceElement = findChildNode(applicableHeaderTradeAgreement, EInvoiceNS.RAM,
                 "BuyerReference");
         if (buyerReferenceElement != null) {
-            buyerReference = buyerReferenceElement.getTextContent();
+            setBuyerReference(buyerReferenceElement.getTextContent());
         }
         Element tradePartyElement = findChildNode(applicableHeaderTradeAgreement, EInvoiceNS.RAM,
                 "SellerTradeParty");
         if (tradePartyElement != null) {
-            tradeParties.add(parseTradeParty(tradePartyElement, "seller"));
+            getTradeParties().add(parseTradeParty(tradePartyElement, "seller"));
         }
         tradePartyElement = findChildNode(applicableHeaderTradeAgreement, EInvoiceNS.RAM,
                 "BuyerTradeParty");
         if (tradePartyElement != null) {
-            tradeParties.add(parseTradeParty(tradePartyElement, "buyer"));
+            getTradeParties().add(parseTradeParty(tradePartyElement, "buyer"));
         }
 
         // read ShipToTradeParty from ApplicableHeaderTradeDelivery
         tradePartyElement = findChildNode(applicableHeaderTradeDelivery, EInvoiceNS.RAM, "ShipToTradeParty");
         if (tradePartyElement != null) {
-            tradeParties.add(parseTradeParty(tradePartyElement, "ship_to"));
+            getTradeParties().add(parseTradeParty(tradePartyElement, "ship_to"));
         }
 
         // read line items...
@@ -364,7 +364,7 @@ public class EInvoiceModelCII extends EInvoiceModel {
         if (lineTotalElement != null) {
             lineTotalElement.setTextContent(value.toPlainString());
             // Update auch den internen Wert
-            netTotalAmount = value;
+            super.setNetTotalAmount(value);
         }
         // Update TaxBasisTotalAmount
         Element taxBasisElement = findChildNode(specifiedTradeSettlementHeaderMonetarySummation, EInvoiceNS.RAM,

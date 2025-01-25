@@ -101,7 +101,7 @@ public class EInvoiceModelUBL extends EInvoiceModel {
         // cbc:ID
         element = findChildNode(getRoot(), EInvoiceNS.CBC, "ID");
         if (element != null) {
-            id = element.getTextContent();
+            setId(element.getTextContent());
         }
 
         // read Date time
@@ -109,13 +109,13 @@ public class EInvoiceModelUBL extends EInvoiceModel {
         if (element != null) {
             String dateStr = element.getTextContent();
             DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd");
-            issueDateTime = LocalDate.parse(dateStr, formatter);
+            setIssueDateTime(LocalDate.parse(dateStr, formatter));
         }
 
         Element accountingSupplierPartyElement = findChildNode(getRoot(), EInvoiceNS.CAC,
                 "AccountingSupplierParty");
         if (accountingSupplierPartyElement != null) {
-            tradeParties.add(parseTradeParty(accountingSupplierPartyElement, "seller"));
+            getTradeParties().add(parseTradeParty(accountingSupplierPartyElement, "seller"));
         }
 
         parseTotal();
@@ -135,16 +135,16 @@ public class EInvoiceModelUBL extends EInvoiceModel {
             child = findChildNode(monetaryTotalElement, EInvoiceNS.CBC,
                     "TaxInclusiveAmount");
             if (child != null) {
-                grandTotalAmount = new BigDecimal(child.getTextContent()).setScale(2, RoundingMode.HALF_UP);
+                setGrandTotalAmount(new BigDecimal(child.getTextContent()).setScale(2, RoundingMode.HALF_UP));
             }
             // net
             child = findChildNode(monetaryTotalElement, EInvoiceNS.CBC,
                     "LineExtensionAmount");
             if (child != null) {
-                netTotalAmount = new BigDecimal(child.getTextContent()).setScale(2, RoundingMode.HALF_UP);
+                setNetTotalAmount(new BigDecimal(child.getTextContent()).setScale(2, RoundingMode.HALF_UP));
             }
             // tax
-            taxTotalAmount = grandTotalAmount.subtract(netTotalAmount).setScale(2, RoundingMode.HALF_UP);
+            setTaxTotalAmount(getGrandTotalAmount().subtract(getNetTotalAmount().setScale(2, RoundingMode.HALF_UP)));
 
         }
 
@@ -183,38 +183,50 @@ public class EInvoiceModelUBL extends EInvoiceModel {
 
     @Override
     public void setId(String value) {
-        // TODO Auto-generated method stub
-        throw new UnsupportedOperationException("Unimplemented method 'setId'");
+        super.setId(value);
+        Element element = findOrCreateChildNode(getRoot(), EInvoiceNS.CBC, "ID");
+        element.setTextContent(value);
     }
 
     @Override
     public void setIssueDateTime(LocalDate value) {
-        // TODO Auto-generated method stub
-        throw new UnsupportedOperationException("Unimplemented method 'setIssueDateTime'");
-    }
-
-    @Override
-    public void setNetTotalAmount(BigDecimal value) {
-        // TODO Auto-generated method stub
-        throw new UnsupportedOperationException("Unimplemented method 'setNetTotalAmount'");
-    }
-
-    @Override
-    public void setGrandTotalAmount(BigDecimal value) {
-        // TODO Auto-generated method stub
-        throw new UnsupportedOperationException("Unimplemented method 'setGrandTotalAmount'");
+        super.setIssueDateTime(value);
+        Element element = findOrCreateChildNode(getRoot(), EInvoiceNS.CBC, "IssueDate");
+        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd");
+        element.setTextContent(formatter.format(value));
     }
 
     @Override
     public void setDueDateTime(LocalDate value) {
-        // TODO Auto-generated method stub
-        throw new UnsupportedOperationException("Unimplemented method 'setDueDateTime'");
+        super.setDueDateTime(value);
+        Element element = findOrCreateChildNode(getRoot(), EInvoiceNS.CBC, "DueDate");
+        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd");
+        element.setTextContent(formatter.format(value));
+    }
+
+    @Override
+    public void setNetTotalAmount(BigDecimal value) {
+        super.setNetTotalAmount(value);
+        Element monetaryTotalElement = findOrCreateChildNode(getRoot(), EInvoiceNS.CAC, "LegalMonetaryTotal");
+        Element lineExtensionElement = findOrCreateChildNode(monetaryTotalElement, EInvoiceNS.CBC,
+                "LineExtensionAmount");
+        lineExtensionElement.setTextContent(value.toPlainString());
+    }
+
+    @Override
+    public void setGrandTotalAmount(BigDecimal value) {
+        super.setGrandTotalAmount(value);
+        Element monetaryTotalElement = findOrCreateChildNode(getRoot(), EInvoiceNS.CAC, "LegalMonetaryTotal");
+        Element taxInclusiveElement = findOrCreateChildNode(monetaryTotalElement, EInvoiceNS.CBC, "TaxInclusiveAmount");
+        taxInclusiveElement.setTextContent(value.toPlainString());
     }
 
     @Override
     public void setTaxTotalAmount(BigDecimal value) {
-        // TODO Auto-generated method stub
-        throw new UnsupportedOperationException("Unimplemented method 'setTaxTotalAmount'");
+        super.setTaxTotalAmount(value);
+        Element taxTotalElement = findOrCreateChildNode(getRoot(), EInvoiceNS.CAC, "TaxTotal");
+        Element taxAmountElement = findOrCreateChildNode(taxTotalElement, EInvoiceNS.CBC, "TaxAmount");
+        taxAmountElement.setTextContent(value.toPlainString());
     }
 
 }
