@@ -4,7 +4,7 @@
 	<artifactId>imixs-e-invoice</artifactId>
 	<packaging>jar</packaging>
 	<name>Imixs E-Invoice</name>
-	<version>1.0.1</version>
+	<version>1.0.2-SNAPSHOT</version>
 
 	<description>A simple java library to read and generate e-invoice documents</description>
 	<url>https://github.com/imixs/e-invoice</url>
@@ -33,7 +33,7 @@
 		<connection>scm:git:git@github.com:imixs/e-invoice.git</connection>
 		<developerConnection>scm:git:git@github.com:imixs/e-invoice.git</developerConnection>
 		<url>https://github.com/imixs/e-invoice/</url>
-		<tag>imixs-e-invoice-1.0.1</tag>
+		<tag>HEAD</tag>
 	</scm>
 
 	<issueManagement>
