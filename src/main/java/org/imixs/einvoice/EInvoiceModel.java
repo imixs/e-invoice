@@ -302,8 +302,8 @@ public abstract class EInvoiceModel {
             NodeList childs = parent.getChildNodes();
             for (int i = 0; i < childs.getLength(); i++) {
                 Node childNode = childs.item(i);
-
-                if (childNode.getNodeType() == Node.ELEMENT_NODE && tagName.equals(childNode.getNodeName())) {
+                if (childNode != null && childNode.getNodeType() == Node.ELEMENT_NODE
+                        && tagName.equals(childNode.getNodeName())) {
                     result.add((Element) childNode);
                 }
             }
