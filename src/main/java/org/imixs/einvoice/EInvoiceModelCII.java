@@ -625,6 +625,18 @@ public class EInvoiceModelCII extends EInvoiceModel {
             updateElementValue(product, EInvoiceNS.RAM, "Description", item.getDescription());
         }
 
+        // order ref id -
+        // /rsm:CrossIndustryInvoice/rsm:SupplyChainTradeTransaction/ram:IncludedSupplyChainTradeLineItem/ram:SpecifiedLineTradeAgreement/ram:BuyerOrderReferencedDocument/ram:LineID
+        if (item.getOrderReferenceId() != null && !item.getOrderReferenceId().isEmpty()) {
+            // ram:SpecifiedLineTradeAgreement/ram:BuyerOrderReferencedDocument/ram:LineID
+            Element buyerOrderReferencedDocument = getDoc()
+                    .createElement(getPrefix(EInvoiceNS.RAM) + "BuyerOrderReferencedDocument");
+            Element lineIDElement = getDoc().createElement(getPrefix(EInvoiceNS.RAM) + "LineID");
+            lineIDElement.setTextContent(item.getOrderReferenceId());
+            buyerOrderReferencedDocument.appendChild(lineIDElement);
+            agreement.appendChild(buyerOrderReferencedDocument);
+        }
+
         // Trade Agreement (Prices)
         Element grossPrice = getDoc().createElement(getPrefix(EInvoiceNS.RAM) + "GrossPriceProductTradePrice");
         Element grossAmount = getDoc().createElement(getPrefix(EInvoiceNS.RAM) + "ChargeAmount");
@@ -636,17 +648,6 @@ public class EInvoiceModelCII extends EInvoiceModel {
         netAmount.setTextContent(String.valueOf(item.getNetPrice()));
         netPrice.appendChild(netAmount);
         agreement.appendChild(netPrice);
-
-        // order ref id -
-        if (item.getOrderReferenceId() != null && !item.getOrderReferenceId().isEmpty()) {
-            // ram:SpecifiedLineTradeAgreement/ram:BuyerOrderReferencedDocument/ram:LineID
-            Element buyerOrderReferencedDocument = getDoc()
-                    .createElement(getPrefix(EInvoiceNS.RAM) + "BuyerOrderReferencedDocument");
-            Element lineIDElement = getDoc().createElement(getPrefix(EInvoiceNS.RAM) + "LineID");
-            lineIDElement.setTextContent(item.getOrderReferenceId());
-            buyerOrderReferencedDocument.appendChild(lineIDElement);
-            agreement.appendChild(buyerOrderReferencedDocument);
-        }
 
         // Trade Delivery (Quantity)
         Element quantity = getDoc().createElement(getPrefix(EInvoiceNS.RAM) + "BilledQuantity");
