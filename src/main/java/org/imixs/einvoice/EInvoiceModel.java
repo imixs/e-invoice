@@ -39,6 +39,7 @@ public abstract class EInvoiceModel {
     // elements
     private String id = null;
     private String buyerReference = null;
+    private String buyerOrderReferenceId = null; // Order-ID
     private LocalDate issueDateTime = null;
     private LocalDate dueDateTime = null;
     private BigDecimal grandTotalAmount = new BigDecimal("0.00");
@@ -222,6 +223,14 @@ public abstract class EInvoiceModel {
 
     public void setBuyerReference(String buyerReference) {
         this.buyerReference = buyerReference;
+    }
+
+    public String getBuyerOrderReferenceId() {
+        return buyerOrderReferenceId;
+    }
+
+    public void setBuyerOrderReferenceId(String buyerOrderReferenceId) {
+        this.buyerOrderReferenceId = buyerOrderReferenceId;
     }
 
     /**

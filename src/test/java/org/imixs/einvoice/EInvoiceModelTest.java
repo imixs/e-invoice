@@ -59,6 +59,9 @@ class EInvoiceModelTest {
         assertNotNull(buyer);
         assertEquals("Viborg Metall GbR", buyer.getName());
 
+        // Auftragsnummer
+        assertEquals("5050031606", eInvoiceModel.getBuyerOrderReferenceId());
+
     }
 
     @Test
@@ -90,7 +93,8 @@ class EInvoiceModelTest {
         TradeParty seller = eInvoiceModel.findTradeParty("seller");
         assertNotNull(seller);
         assertEquals("Lieferant GmbH", seller.getName());
-
+        // Auftragsnummer
+        assertEquals("5050031606", eInvoiceModel.getBuyerOrderReferenceId());
     }
 
     @Test

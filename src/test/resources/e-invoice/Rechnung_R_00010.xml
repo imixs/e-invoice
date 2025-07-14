@@ -90,6 +90,9 @@
 
     <ram:ApplicableHeaderTradeAgreement>
       <ram:BuyerReference>123-1234512345-12</ram:BuyerReference>
+      <ram:BuyerOrderReferencedDocument>
+        <ram:IssuerAssignedID>5050031606</ram:IssuerAssignedID>
+      </ram:BuyerOrderReferencedDocument>
       <ram:SellerTradeParty>
         <ram:Name>Max Mustermann</ram:Name>
         <ram:PostalTradeAddress>

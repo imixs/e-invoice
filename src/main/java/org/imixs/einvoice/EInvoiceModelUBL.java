@@ -118,6 +118,15 @@ public class EInvoiceModelUBL extends EInvoiceModel {
             getTradeParties().add(parseTradeParty(accountingSupplierPartyElement, "seller"));
         }
 
+        Element orderReferenceElement = findChildNode(getRoot(), EInvoiceNS.CAC,
+                "OrderReference");
+        if (orderReferenceElement != null) {
+            Element _idElement = findChildNode(orderReferenceElement, EInvoiceNS.CBC, "ID");
+            if (_idElement != null) {
+                setBuyerOrderReferenceId(_idElement.getTextContent());
+            }
+        }
+
         parseTotal();
 
     }
@@ -194,6 +203,14 @@ public class EInvoiceModelUBL extends EInvoiceModel {
         Element element = findOrCreateChildNode(getRoot(), EInvoiceNS.CBC, "IssueDate");
         DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd");
         element.setTextContent(formatter.format(value));
+    }
+
+    @Override
+    public void setBuyerOrderReferenceId(String value) {
+        super.setBuyerOrderReferenceId(value);
+        Element orderrefElement = findOrCreateChildNode(getRoot(), EInvoiceNS.CAC, "OrderReference");
+        Element element = findOrCreateChildNode(orderrefElement, EInvoiceNS.CBC, "ID");
+        element.setTextContent(value);
     }
 
     @Override

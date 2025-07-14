@@ -167,6 +167,17 @@ public class EInvoiceModelCII extends EInvoiceModel {
         if (buyerReferenceElement != null) {
             setBuyerReference(buyerReferenceElement.getTextContent());
         }
+        // read oder number
+        Element buyerOrderReferenceElement = findChildNode(applicableHeaderTradeAgreement, EInvoiceNS.RAM,
+                "BuyerOrderReferencedDocument");
+        if (buyerOrderReferenceElement != null) {
+            Element issuerAssignedID = findChildNode(buyerOrderReferenceElement, EInvoiceNS.RAM,
+                    "IssuerAssignedID");
+            if (issuerAssignedID != null) {
+                setBuyerOrderReferenceId(issuerAssignedID.getTextContent());
+            }
+        }
+
         Element tradePartyElement = findChildNode(applicableHeaderTradeAgreement, EInvoiceNS.RAM,
                 "SellerTradeParty");
         if (tradePartyElement != null) {
@@ -353,6 +364,16 @@ public class EInvoiceModelCII extends EInvoiceModel {
         dateTimeElement.setAttribute("format", "102");
         DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyyMMdd");
         dateTimeElement.setTextContent(formatter.format(value));
+    }
+
+    @Override
+    public void setBuyerOrderReferenceId(String value) {
+        super.setBuyerOrderReferenceId(value);
+        Element buyerOrderReferenceElement = findOrCreateChildNode(applicableHeaderTradeAgreement, EInvoiceNS.RAM,
+                "BuyerOrderReferencedDocument");
+        Element issuerAssignedID = findOrCreateChildNode(buyerOrderReferenceElement, EInvoiceNS.RAM,
+                "IssuerAssignedID");
+        issuerAssignedID.setTextContent(value);
     }
 
     @Override

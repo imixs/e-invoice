@@ -160,4 +160,7 @@
       <cbc:PriceAmount currencyID="EUR">5.5</cbc:PriceAmount>
     </cac:Price>
   </cac:InvoiceLine>
+  <cac:OrderReference>
+    <cbc:ID>5050031606</cbc:ID>
+  </cac:OrderReference>
 </Invoice>
