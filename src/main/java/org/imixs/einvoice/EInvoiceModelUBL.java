@@ -4,6 +4,8 @@ import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
+import java.util.LinkedHashSet;
+import java.util.Set;
 
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
@@ -123,12 +125,15 @@ public class EInvoiceModelUBL extends EInvoiceModel {
         if (orderReferenceElement != null) {
             Element _idElement = findChildNode(orderReferenceElement, EInvoiceNS.CBC, "ID");
             if (_idElement != null) {
-                setBuyerOrderReferenceId(_idElement.getTextContent());
+                setOrderReferenceId(_idElement.getTextContent());
             }
         }
 
         parseTotal();
 
+        // read line items...
+        Set<TradeLineItem> lineItems = parseTradeLineItems();
+        this.setTradeLineItems(lineItems);
     }
 
     /**
@@ -190,6 +195,72 @@ public class EInvoiceModelUBL extends EInvoiceModel {
         return tradeParty;
     }
 
+    /**
+     * Parse the trade line items and return a list of items collected
+     * 
+     * <cac:InvoiceLine>
+     * 
+     * @return
+     */
+    public Set<TradeLineItem> parseTradeLineItems() {
+        Set<TradeLineItem> items = new LinkedHashSet<>();
+
+        Set<Element> lineItems = findChildNodesByName(getRoot(), EInvoiceNS.CAC,
+                "InvoiceLine");
+
+        for (Element lineItem : lineItems) {
+            // Get Line ID
+
+            Element idElement = findChildNode(lineItem, EInvoiceNS.CBC, "ID");
+            if (idElement == null)
+                continue;
+
+            TradeLineItem item = new TradeLineItem(idElement.getTextContent());
+
+            // Product details
+            Element product = findChildNode(lineItem, EInvoiceNS.CAC, "Item");
+            if (product != null) {
+                Element nameElement = findChildNode(product, EInvoiceNS.CBC, "Name");
+                if (nameElement != null) {
+                    item.setName(nameElement.getTextContent());
+                }
+
+            }
+
+            // Price info
+            Element price = findChildNode(lineItem, EInvoiceNS.CAC, "Price");
+            if (price != null) {
+                // <cbc:PriceAmount currencyID="EUR">9.9</cbc:PriceAmount>
+                Element priceAmount = findChildNode(price, EInvoiceNS.CBC, "PriceAmount");
+                if (priceAmount != null) {
+                    item.setGrossPrice(Double.parseDouble(priceAmount.getTextContent()));
+                }
+            }
+
+            // OrderLineReference
+            Element orderLineReference = findChildNode(lineItem, EInvoiceNS.CAC, "OrderLineReference");
+            if (orderLineReference != null) {
+                // <cbc:PriceAmount currencyID="EUR">9.9</cbc:PriceAmount>
+                Element lineID = findChildNode(orderLineReference, EInvoiceNS.CBC, "LineID");
+                if (lineID != null) {
+                    item.setOrderReferenceId(lineID.getTextContent());
+                }
+            }
+
+            // Quantity
+
+            Element quantity = findChildNode(lineItem, EInvoiceNS.CBC, "InvoicedQuantity");
+            if (quantity != null) {
+                item.setQuantity(Double.parseDouble(quantity.getTextContent()));
+            }
+
+            items.add(item);
+        }
+
+        return items;
+
+    }
+
     @Override
     public void setId(String value) {
         super.setId(value);
@@ -206,8 +277,8 @@ public class EInvoiceModelUBL extends EInvoiceModel {
     }
 
     @Override
-    public void setBuyerOrderReferenceId(String value) {
-        super.setBuyerOrderReferenceId(value);
+    public void setOrderReferenceId(String value) {
+        super.setOrderReferenceId(value);
         Element orderrefElement = findOrCreateChildNode(getRoot(), EInvoiceNS.CAC, "OrderReference");
         Element element = findOrCreateChildNode(orderrefElement, EInvoiceNS.CBC, "ID");
         element.setTextContent(value);

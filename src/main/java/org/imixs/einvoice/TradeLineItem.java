@@ -3,7 +3,7 @@ package org.imixs.einvoice;
 /**
  * A TradeParty is a container for a TradeParty element.
  * 
- * @author rsoika 
+ * @author rsoika
  *
  */
 public class TradeLineItem {
@@ -16,6 +16,7 @@ public class TradeLineItem {
     private double quantity;
     private double taxRate;
     private double total;
+    private String orderReferenceId; // Order-ID
 
     public TradeLineItem(String id) {
         this.id = id;
@@ -85,6 +86,14 @@ public class TradeLineItem {
         this.total = total;
     }
 
+    public String getOrderReferenceId() {
+        return orderReferenceId;
+    }
+
+    public void setOrderReferenceId(String orderReferenceId) {
+        this.orderReferenceId = orderReferenceId;
+    }
+
     // toString method for easy debugging
     @Override
     public String toString() {
@@ -98,5 +107,4 @@ public class TradeLineItem {
                 ", total='" + total + '\'' +
                 '}';
     }
-
 }

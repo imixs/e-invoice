@@ -39,7 +39,7 @@ public abstract class EInvoiceModel {
     // elements
     private String id = null;
     private String buyerReference = null;
-    private String buyerOrderReferenceId = null; // Order-ID
+    private String orderReferenceId = null; // Order-ID
     private LocalDate issueDateTime = null;
     private LocalDate dueDateTime = null;
     private BigDecimal grandTotalAmount = new BigDecimal("0.00");
@@ -225,12 +225,12 @@ public abstract class EInvoiceModel {
         this.buyerReference = buyerReference;
     }
 
-    public String getBuyerOrderReferenceId() {
-        return buyerOrderReferenceId;
+    public String getOrderReferenceId() {
+        return orderReferenceId;
     }
 
-    public void setBuyerOrderReferenceId(String buyerOrderReferenceId) {
-        this.buyerOrderReferenceId = buyerOrderReferenceId;
+    public void setOrderReferenceId(String _orderReferenceId) {
+        this.orderReferenceId = _orderReferenceId;
     }
 
     /**
@@ -243,6 +243,10 @@ public abstract class EInvoiceModel {
             tradeLineItems = new LinkedHashSet<TradeLineItem>();
         }
         return tradeLineItems;
+    }
+
+    public void setTradeLineItems(Set<TradeLineItem> tradeLineItems) {
+        this.tradeLineItems = tradeLineItems;
     }
 
     /**

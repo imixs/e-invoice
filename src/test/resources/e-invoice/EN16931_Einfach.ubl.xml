@@ -135,6 +135,9 @@
     <cac:Price>
       <cbc:PriceAmount currencyID="EUR">9.9</cbc:PriceAmount>
     </cac:Price>
+    <cac:OrderLineReference>
+      <cbc:LineID>00010</cbc:LineID>
+    </cac:OrderLineReference>
   </cac:InvoiceLine>
   <cac:InvoiceLine>
     <cbc:ID>2</cbc:ID>
@@ -159,6 +162,9 @@
     <cac:Price>
       <cbc:PriceAmount currencyID="EUR">5.5</cbc:PriceAmount>
     </cac:Price>
+    <cac:OrderLineReference>
+      <cbc:LineID>00020</cbc:LineID>
+    </cac:OrderLineReference>
   </cac:InvoiceLine>
   <cac:OrderReference>
     <cbc:ID>5050031606</cbc:ID>

@@ -8,6 +8,8 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.math.BigDecimal;
 import java.time.LocalDate;
+import java.util.Iterator;
+import java.util.Set;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -60,7 +62,18 @@ class EInvoiceModelTest {
         assertEquals("Viborg Metall GbR", buyer.getName());
 
         // Auftragsnummer
-        assertEquals("5050031606", eInvoiceModel.getBuyerOrderReferenceId());
+        assertEquals("5050031606", eInvoiceModel.getOrderReferenceId());
+
+        // test Lineitems...
+        Set<TradeLineItem> tradeItems = eInvoiceModel.getTradeLineItems();
+        assertEquals(2, tradeItems.size());
+        Iterator<TradeLineItem> lineItemIterator = tradeItems.iterator();
+        // test first line item
+        TradeLineItem lineItem = lineItemIterator.next();
+        assertEquals("00010", lineItem.getOrderReferenceId());
+        // test second line item
+        lineItem = lineItemIterator.next();
+        assertEquals("00020", lineItem.getOrderReferenceId());
 
     }
 
@@ -94,7 +107,19 @@ class EInvoiceModelTest {
         assertNotNull(seller);
         assertEquals("Lieferant GmbH", seller.getName());
         // Auftragsnummer
-        assertEquals("5050031606", eInvoiceModel.getBuyerOrderReferenceId());
+        assertEquals("5050031606", eInvoiceModel.getOrderReferenceId());
+
+        // test Lineitems...
+        Set<TradeLineItem> tradeItems = eInvoiceModel.getTradeLineItems();
+        assertEquals(2, tradeItems.size());
+        Iterator<TradeLineItem> lineItemIterator = tradeItems.iterator();
+        // test first line item
+        TradeLineItem lineItem = lineItemIterator.next();
+        assertEquals("00010", lineItem.getOrderReferenceId());
+        // test second line item
+        lineItem = lineItemIterator.next();
+        assertEquals("00020", lineItem.getOrderReferenceId());
+
     }
 
     @Test

@@ -40,6 +40,9 @@
         <ram:NetPriceProductTradePrice>
           <ram:ChargeAmount>2000.0</ram:ChargeAmount>
         </ram:NetPriceProductTradePrice>
+        <ram:BuyerOrderReferencedDocument>
+          <ram:LineID>00010</ram:LineID>
+        </ram:BuyerOrderReferencedDocument>
       </ram:SpecifiedLineTradeAgreement>
       <ram:SpecifiedLineTradeDelivery>
         <ram:BilledQuantity unitCode='H87'>1.0</ram:BilledQuantity>
@@ -72,6 +75,9 @@
         <ram:NetPriceProductTradePrice>
           <ram:ChargeAmount>1870.0</ram:ChargeAmount>
         </ram:NetPriceProductTradePrice>
+        <ram:BuyerOrderReferencedDocument>
+          <ram:LineID>00020</ram:LineID>
+        </ram:BuyerOrderReferencedDocument>
       </ram:SpecifiedLineTradeAgreement>
       <ram:SpecifiedLineTradeDelivery>
         <ram:BilledQuantity unitCode='H87'>1.0</ram:BilledQuantity>

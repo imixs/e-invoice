@@ -167,14 +167,14 @@ public class EInvoiceModelCII extends EInvoiceModel {
         if (buyerReferenceElement != null) {
             setBuyerReference(buyerReferenceElement.getTextContent());
         }
-        // read oder number
+        // read oder reference id
         Element buyerOrderReferenceElement = findChildNode(applicableHeaderTradeAgreement, EInvoiceNS.RAM,
                 "BuyerOrderReferencedDocument");
         if (buyerOrderReferenceElement != null) {
             Element issuerAssignedID = findChildNode(buyerOrderReferenceElement, EInvoiceNS.RAM,
                     "IssuerAssignedID");
             if (issuerAssignedID != null) {
-                setBuyerOrderReferenceId(issuerAssignedID.getTextContent());
+                setOrderReferenceId(issuerAssignedID.getTextContent());
             }
         }
 
@@ -196,7 +196,8 @@ public class EInvoiceModelCII extends EInvoiceModel {
         }
 
         // read line items...
-        parseTradeLineItems();
+        Set<TradeLineItem> lineItems = parseTradeLineItems();
+        this.setTradeLineItems(lineItems);
 
     }
 
@@ -302,6 +303,19 @@ public class EInvoiceModelCII extends EInvoiceModel {
                         item.setNetPrice(Double.parseDouble(amount.getTextContent()));
                     }
                 }
+
+                // order ref id -
+                // ram:SpecifiedLineTradeAgreement/ram:BuyerOrderReferencedDocument/ram:LineID
+                Element buyerOrderReferencedDocument = findChildNode(agreement, EInvoiceNS.RAM,
+                        "BuyerOrderReferencedDocument");
+                if (buyerOrderReferencedDocument != null) {
+                    Element lineIDElement = findChildNode(buyerOrderReferencedDocument, EInvoiceNS.RAM, "LineID");
+                    if (lineIDElement != null) {
+                        item.setOrderReferenceId(lineIDElement.getTextContent());
+                    }
+
+                }
+
             }
 
             // Quantity
@@ -339,6 +353,7 @@ public class EInvoiceModelCII extends EInvoiceModel {
         }
 
         return items;
+
     }
 
     /**
@@ -367,8 +382,8 @@ public class EInvoiceModelCII extends EInvoiceModel {
     }
 
     @Override
-    public void setBuyerOrderReferenceId(String value) {
-        super.setBuyerOrderReferenceId(value);
+    public void setOrderReferenceId(String value) {
+        super.setOrderReferenceId(value);
         Element buyerOrderReferenceElement = findOrCreateChildNode(applicableHeaderTradeAgreement, EInvoiceNS.RAM,
                 "BuyerOrderReferencedDocument");
         Element issuerAssignedID = findOrCreateChildNode(buyerOrderReferenceElement, EInvoiceNS.RAM,
@@ -622,6 +637,17 @@ public class EInvoiceModelCII extends EInvoiceModel {
         netPrice.appendChild(netAmount);
         agreement.appendChild(netPrice);
 
+        // order ref id -
+        if (item.getOrderReferenceId() != null && !item.getOrderReferenceId().isEmpty()) {
+            // ram:SpecifiedLineTradeAgreement/ram:BuyerOrderReferencedDocument/ram:LineID
+            Element buyerOrderReferencedDocument = getDoc()
+                    .createElement(getPrefix(EInvoiceNS.RAM) + "BuyerOrderReferencedDocument");
+            Element lineIDElement = getDoc().createElement(getPrefix(EInvoiceNS.RAM) + "LineID");
+            lineIDElement.setTextContent(item.getOrderReferenceId());
+            buyerOrderReferencedDocument.appendChild(lineIDElement);
+            agreement.appendChild(buyerOrderReferencedDocument);
+        }
+
         // Trade Delivery (Quantity)
         Element quantity = getDoc().createElement(getPrefix(EInvoiceNS.RAM) + "BilledQuantity");
         quantity.setAttribute("unitCode", "C62"); // Standard unit code
@@ -629,7 +655,6 @@ public class EInvoiceModelCII extends EInvoiceModel {
         delivery.appendChild(quantity);
 
         // Trade Settlement (VAT and Total)
-
         Element tax = getDoc().createElement(getPrefix(EInvoiceNS.RAM) + "ApplicableTradeTax");
         Element typeCode = getDoc().createElement(getPrefix(EInvoiceNS.RAM) + "TypeCode");
         typeCode.setTextContent("VAT");
