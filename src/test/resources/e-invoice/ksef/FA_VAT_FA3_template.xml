@@ -1,0 +1,56 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Faktura
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xmlns:xsd="http://www.w3.org/2001/XMLSchema"
+    xmlns:etd="http://crd.gov.pl/xml/schematy/dziedzinowe/mf/2022/01/05/eD/DefinicjeTypy/"
+    xmlns="http://crd.gov.pl/wzor/2025/06/25/13775/">
+    <Naglowek>
+        <KodFormularza kodSystemowy="FA (3)" wersjaSchemy="1-0E">FA</KodFormularza>
+        <WariantFormularza>3</WariantFormularza>
+        <DataWytworzeniaFa></DataWytworzeniaFa>
+        <SystemInfo>Imixs eInvoice</SystemInfo>
+    </Naglowek>
+
+    <!-- Seller (Your Polish Company - Pre-filled) -->
+    <Podmiot1>
+        <DaneIdentyfikacyjne>
+            <NIP>1234567890</NIP>
+            <Nazwa>Your Logistics Poland Sp. z o.o.</Nazwa>
+        </DaneIdentyfikacyjne>
+        <Adres>
+            <KodKraju>PL</KodKraju>
+            <AdresL1>Example Street 123</AdresL1>
+            <AdresL2>00-001 Warsaw</AdresL2>
+        </Adres>
+    </Podmiot1>
+
+    <!-- Buyer (Customer - Empty, to be filled) -->
+    <Podmiot2>
+        <DaneIdentyfikacyjne>
+            <NIP></NIP>
+            <Nazwa></Nazwa>
+        </DaneIdentyfikacyjne>
+        <Adres>
+            <KodKraju></KodKraju>
+            <AdresL1></AdresL1>
+            <AdresL2></AdresL2>
+        </Adres>
+    </Podmiot2>
+
+    <!-- Invoice Data -->
+    <Fa>
+        <KodWaluty>PLN</KodWaluty>
+        <P_1></P_1>           <!-- Invoice Date -->
+        <P_2></P_2>           <!-- Invoice Number -->
+        <P_6></P_6>           <!-- Due Date (NEW position in FA(3)!) -->
+
+        <!-- Line Items will be added here -->
+
+        <!-- Totals -->
+        <P_13_1>0.00</P_13_1>  <!-- Total Net -->
+        <P_14_1>0.00</P_14_1>  <!-- Total VAT -->
+        <P_15>0.00</P_15>      <!-- Total Gross -->
+
+        <RodzajFaktury>VAT</RodzajFaktury>
+    </Fa>
+</Faktura>

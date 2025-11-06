@@ -1,11 +1,9 @@
 package org.imixs.einvoice;
 
 /**
- * Defines the valid BPMN namespaces.
+ * Defines the valid eInvocing namespaces.
  * <p>
- * NOTE: The primary namespace can be either 'bpmn2' or 'bpmn' ! But 'bpmn2' is
- * the default.
- * 
+ * NOTE: The primary namespace are CBC/CAC and RAM/RMS
  * 
  * 
  * // xmlns:a='urn:un:unece:uncefact:data:standard:QualifiedDataType:100'
@@ -16,6 +14,8 @@ package org.imixs.einvoice;
  * // xmlns:xs='http://www.w3.org/2001/XMLSchema'
  * // xmlns:udt='urn:un:unece:uncefact:data:standard:UnqualifiedDataType:100'>
  * 
+ * KSEF is a special format for the Polnisch KSeF format
+ * 
  * @author rsoika
  */
 public enum EInvoiceNS {
@@ -24,5 +24,6 @@ public enum EInvoiceNS {
     RSM, //
     QDT, //
     RAM, //
+    KSEF, // KSeF FA_VAT (Poland)
     UDT;
 }
