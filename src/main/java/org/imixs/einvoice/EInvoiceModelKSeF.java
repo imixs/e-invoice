@@ -3,6 +3,7 @@ package org.imixs.einvoice;
 import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.time.format.DateTimeParseException;
 import java.util.LinkedHashSet;
@@ -311,9 +312,9 @@ public class EInvoiceModelKSeF extends EInvoiceModel {
         super.setIssueDateTime(value);
         DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd");
 
-        // Set in Naglowek (DataWytworzeniaFa) - with timestamp
+        // Set in Naglowek (DataWytworzeniaFa) - NOW with timestamp
         Element dataWytwElement = findOrCreateChildNode(naglowek, EInvoiceNS.KSEF, "DataWytworzeniaFa");
-        dataWytwElement.setTextContent(value.atStartOfDay().toString() + "Z");
+        dataWytwElement.setTextContent(LocalDateTime.now().toString() + "Z");
 
         // Set in Fa (P_1) - date only
         Element p1Element = findOrCreateChildNode(fa, EInvoiceNS.KSEF, "P_1");
