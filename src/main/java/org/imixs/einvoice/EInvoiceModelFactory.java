@@ -100,6 +100,12 @@ public class EInvoiceModelFactory {
                     namespaceURI != null &&
                     namespaceURI.startsWith("urn:oasis:names:specification:ubl")) {
                 model = new EInvoiceModelUBL(doc);
+            }
+            // Check for KSeF Format
+            else if ("Faktura".equals(localName) &&
+                    namespaceURI != null &&
+                    namespaceURI.startsWith("http://crd.gov.pl/")) {
+                model = new EInvoiceModelKSeF(doc);
             } else {
                 throw new EInvoiceFormatException(localName, namespaceURI);
             }
