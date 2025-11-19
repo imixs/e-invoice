@@ -382,7 +382,15 @@ public class EInvoiceModelKSeF extends EInvoiceModel {
 
             // Update NIP
             if (newParty.getVatNumber() != null && !newParty.getVatNumber().isEmpty()) {
-                updateElementValue(daneIdent, EInvoiceNS.KSEF, "NIP", newParty.getVatNumber());
+
+                // for PL set NIP otherwise set NrID
+                String vatID = newParty.getVatNumber();
+                if (vatID.startsWith("PL")) {
+                    updateElementValue(daneIdent, EInvoiceNS.KSEF, "NIP", newParty.getVatNumber().substring(2));
+                } else {
+                    updateElementValue(daneIdent, EInvoiceNS.KSEF, "NrID", newParty.getVatNumber());
+                }
+
             }
 
             // Update Name
