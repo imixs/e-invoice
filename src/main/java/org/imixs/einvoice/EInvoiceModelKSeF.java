@@ -102,7 +102,7 @@ public class EInvoiceModelKSeF extends EInvoiceModel {
 
         // Invoice date (P_1)
         element = findChildNode(fa, EInvoiceNS.KSEF, "P_1");
-        if (element != null) {
+        if (element != null && !element.getTextContent().isEmpty()) {
             String dateStr = element.getTextContent();
             try {
                 DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd");
@@ -114,7 +114,7 @@ public class EInvoiceModelKSeF extends EInvoiceModel {
 
         // Due date (P_6 in FA(3)!)
         element = findChildNode(fa, EInvoiceNS.KSEF, "P_6");
-        if (element != null) {
+        if (element != null && !element.getTextContent().isEmpty()) {
             String dateStr = element.getTextContent();
             try {
                 DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd");
@@ -434,14 +434,8 @@ public class EInvoiceModelKSeF extends EInvoiceModel {
 
         super.setTradeLineItem(item);
 
-        // Find insertion point (before Adnotacje or P_13_1)
-        Element insertBefore = findChildNode(fa, EInvoiceNS.KSEF, "Adnotacje");
-        if (insertBefore == null) {
-            insertBefore = findChildNode(fa, EInvoiceNS.KSEF, "P_13_1");
-        }
-
-        // Create FaWiersz element
-        Element faWiersz = createChildNode(fa, EInvoiceNS.KSEF, "FaWiersz", insertBefore);
+        // Create FaWiersz element (append in FA)
+        Element faWiersz = createChildNode(fa, EInvoiceNS.KSEF, "FaWiersz");
 
         // Line number (NrWierszaFa)
         updateElementValue(faWiersz, EInvoiceNS.KSEF, "NrWierszaFa", item.getId());
@@ -474,8 +468,10 @@ public class EInvoiceModelKSeF extends EInvoiceModel {
         // Net amount (P_11)
         updateElementValue(faWiersz, EInvoiceNS.KSEF, "P_11", String.format("%.2f", item.getTotal()));
 
-        // VAT rate (P_12)
-        updateElementValue(faWiersz, EInvoiceNS.KSEF, "P_12", String.valueOf((int) item.getTaxRate()));
+        // VAT rate (P_12) if >0
+        if (item.getTaxRate() > 0) {
+            updateElementValue(faWiersz, EInvoiceNS.KSEF, "P_12", String.valueOf((int) item.getTaxRate()));
+        }
     }
 
 }
