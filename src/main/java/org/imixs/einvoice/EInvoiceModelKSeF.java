@@ -143,6 +143,41 @@ public class EInvoiceModelKSeF extends EInvoiceModel {
     }
 
     /**
+     * This helper method allows to set the KSeF field 'RodzajFaktury'
+     * 
+     * Expected values are VAT, KOR, ZAL, ROZ, UPR, KOR_ZAL, KOR_ROZ
+     * 
+     * @param type
+     */
+    public void setRodzajFaktury(String type) {
+        updateElementValue(fa, EInvoiceNS.KSEF, "RodzajFaktury", type);
+    }
+
+    /**
+     * This helper method returns the KSeF field 'RodzajFaktury'
+     * 
+     * Expected values are VAT, KOR, ZAL, ROZ, UPR, KOR_ZAL, KOR_ROZ
+     * 
+     * Default is 'VAT'
+     * 
+     * @return
+     */
+    public String getRodzajFaktury() {
+        String result = null;
+        Element element = findChildNode(fa, EInvoiceNS.KSEF, "RodzajFaktury");
+        if (element != null) {
+            result = element.getTextContent();
+        }
+
+        // Set Default VAT
+        if (result == null || result.isBlank()) {
+            result = "VAT";
+        }
+
+        return result;
+    }
+
+    /**
      * Parse monetary totals from Fa element
      */
     public void parseTotal() {
@@ -330,10 +365,22 @@ public class EInvoiceModelKSeF extends EInvoiceModel {
         element.setTextContent(formatter.format(value));
     }
 
+    /**
+     * The net amount target field depends on the RodzajFaktury
+     * 
+     * for 'VAT' it is 'P_13_1' for 'KOR' it is 'P_13_6_1'
+     */
     @Override
     public void setNetTotalAmount(BigDecimal value) {
         super.setNetTotalAmount(value);
-        Element element = findOrCreateChildNode(fa, EInvoiceNS.KSEF, "P_13_1");
+
+        Element element = null;
+        if ("KOR".equals(getRodzajFaktury())) {
+            element = findOrCreateChildNode(fa, EInvoiceNS.KSEF, "P_13_6_1");
+        } else {
+            // default
+            element = findOrCreateChildNode(fa, EInvoiceNS.KSEF, "P_13_1");
+        }
         element.setTextContent(value.setScale(2, RoundingMode.HALF_UP).toPlainString());
     }
 
