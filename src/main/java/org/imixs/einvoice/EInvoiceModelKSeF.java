@@ -29,11 +29,47 @@ public class EInvoiceModelKSeF extends EInvoiceModel {
     private static final String KSEF_NS = "http://crd.gov.pl/wzor/2025/06/25/13775/";
     private static final String KSEF_PREFIX = ""; // Default namespace, no prefix
 
+    /**
+     * Set of EU country codes for VAT ID prefixes (excluding Poland).
+     * Note: Greece uses "EL" (not "GR") for VAT IDs.
+     * Note: UK is no longer in the EU since Brexit.
+     */
+    private static final Set<String> EU_COUNTRY_CODES = Set.of(
+            "AT", // Austria
+            "BE", // Belgium
+            "BG", // Bulgaria
+            "CY", // Cyprus
+            "CZ", // Czech Republic
+            "DE", // Germany
+            "DK", // Denmark
+            "EE", // Estonia
+            "EL", // Greece (uses EL for VAT, not GR!)
+            "ES", // Spain
+            "FI", // Finland
+            "FR", // France
+            "HR", // Croatia
+            "HU", // Hungary
+            "IE", // Ireland
+            "IT", // Italy
+            "LT", // Lithuania
+            "LU", // Luxembourg
+            "LV", // Latvia
+            "MT", // Malta
+            "NL", // Netherlands
+            "PT", // Portugal
+            "RO", // Romania
+            "SE", // Sweden
+            "SI", // Slovenia
+            "SK" // Slovakia
+    );
+
     // Main structure elements
     protected Element naglowek;
     protected Element podmiot1;
     protected Element podmiot2;
     protected Element fa;
+
+    protected String taxType = null;
 
     public EInvoiceModelKSeF(Document doc) {
         super(doc);
@@ -366,36 +402,81 @@ public class EInvoiceModelKSeF extends EInvoiceModel {
     }
 
     /**
-     * The net amount target field depends on the RodzajFaktury
+     * Sets the net total amount in the correct field based on taxType.
+     * <p>
+     * Field mapping:
+     * <ul>
+     * <li>taxType "1" (Poland): P_13_1 (domestic VAT)</li>
+     * <li>taxType "2" (EU): P_13_6_2 (intra-community delivery, 0%)</li>
+     * <li>taxType "3" (Non-EU): P_13_6_3 (export, 0%)</li>
+     * </ul>
      * 
-     * for 'VAT' it is 'P_13_1' for 'KOR' it is 'P_13_6_1'
+     * @param value the net total amount
      */
     @Override
     public void setNetTotalAmount(BigDecimal value) {
         super.setNetTotalAmount(value);
 
-        Element element = null;
-        if ("KOR".equals(getRodzajFaktury())) {
-            element = findOrCreateChildNode(fa, EInvoiceNS.KSEF, "P_13_6_1");
+        Element element;
+
+        if ("2".equals(taxType)) {
+            // EU: P_13_6_2 comes after P_13_6_1 (or after P_6 if no P_13_x exists)
+            element = findOrCreateChildNodeAfter(fa, EInvoiceNS.KSEF, "P_13_6_2", "P_6");
+        } else if ("3".equals(taxType)) {
+            // Export: P_13_6_3 comes after P_13_6_2
+            element = findOrCreateChildNodeAfter(fa, EInvoiceNS.KSEF, "P_13_6_3", "P_6");
         } else {
-            // default
-            element = findOrCreateChildNode(fa, EInvoiceNS.KSEF, "P_13_1");
+            // Poland: P_13_1 comes after P_6
+            element = findOrCreateChildNodeAfter(fa, EInvoiceNS.KSEF, "P_13_1", "P_6");
         }
+
         element.setTextContent(value.setScale(2, RoundingMode.HALF_UP).toPlainString());
     }
 
+    /**
+     * Sets the tax total amount (P_14_1).
+     * <p>
+     * This field is only valid for domestic Polish invoices (taxType "1").
+     * For EU (taxType "2") and export (taxType "3") invoices, no tax field
+     * should be set as these are 0% VAT transactions.
+     * 
+     * @param value the tax total amount
+     */
     @Override
     public void setTaxTotalAmount(BigDecimal value) {
+        // Only set tax for domestic Polish invoices
+        if ("2".equals(taxType) || "3".equals(taxType)) {
+            return;
+        }
+
         super.setTaxTotalAmount(value);
-        Element element = findOrCreateChildNode(fa, EInvoiceNS.KSEF, "P_14_1");
+        // P_14_1 must come directly after P_13_1
+        Element element = findOrCreateChildNodeAfter(fa, EInvoiceNS.KSEF, "P_14_1", "P_13_1");
         element.setTextContent(value.setScale(2, RoundingMode.HALF_UP).toPlainString());
+
     }
 
     @Override
     public void setGrandTotalAmount(BigDecimal value) {
         super.setGrandTotalAmount(value);
-        Element element = findOrCreateChildNode(fa, EInvoiceNS.KSEF, "P_15");
+
+        // Determine the correct predecessor based on taxType
+        String afterElement;
+        if ("2".equals(taxType)) {
+            afterElement = "P_13_6_2";
+        } else if ("3".equals(taxType)) {
+            afterElement = "P_13_6_3";
+        } else {
+            // Poland: P_15 comes after P_14_1 (or P_13_1 if no tax)
+            afterElement = "P_14_1";
+            if (findChildNode(fa, EInvoiceNS.KSEF, "P_14_1") == null) {
+                afterElement = "P_13_1";
+            }
+        }
+
+        Element element = findOrCreateChildNodeAfter(fa, EInvoiceNS.KSEF, "P_15", afterElement);
         element.setTextContent(value.setScale(2, RoundingMode.HALF_UP).toPlainString());
+
     }
 
     /**
@@ -521,4 +602,59 @@ public class EInvoiceModelKSeF extends EInvoiceModel {
         }
     }
 
+    /**
+     * This helper method computes the KSeF tax type based on the VAT ID.
+     * The tax type is used to compute the fields P_13_6_1, P_13_6_2, P_13_6_3
+     * <p>
+     * Possible values:
+     * <ul>
+     * <li>"1" - Poland (domestic, 0% special cases)</li>
+     * <li>"2" - EU country (intra-community delivery / WDT)</li>
+     * <li>"3" - Non-EU country (export)</li>
+     * </ul>
+     * 
+     * @param vatID the VAT identification number with country prefix
+     */
+    public void setTaxType(String vatID) {
+        if (vatID == null || vatID.isBlank()) {
+            return;
+        }
+
+        String id = vatID.trim().toUpperCase();
+
+        // Poland - domestic
+        if (id.startsWith("PL")) {
+            this.taxType = "1";
+            return;
+        }
+
+        // Check for EU country prefix (first 2 characters)
+        if (id.length() >= 2) {
+            String countryCode = id.substring(0, 2);
+            if (EU_COUNTRY_CODES.contains(countryCode)) {
+                this.taxType = "2";
+                return;
+            }
+        }
+
+        // Non-EU country (export)
+        this.taxType = "3";
+    }
+
+    /**
+     * This helper method returns the KSeF tax type for the fields
+     * P_13_6_1, P_13_6_2, P_13_6_3
+     * <p>
+     * Possible values:
+     * <ul>
+     * <li>"1" - Poland (P_13_6_1)</li>
+     * <li>"2" - EU country (P_13_6_2)</li>
+     * <li>"3" - Non-EU country (P_13_6_3)</li>
+     * </ul>
+     * 
+     * @return the tax type
+     */
+    public String getTaxType() {
+        return this.taxType;
+    }
 }

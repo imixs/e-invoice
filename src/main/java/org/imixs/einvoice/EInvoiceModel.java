@@ -371,6 +371,45 @@ public abstract class EInvoiceModel {
     }
 
     /**
+     * Finds or creates a child element positioned after a specified predecessor
+     * element.
+     * If the element already exists, it is returned as-is.
+     * If it doesn't exist, it is created and inserted after the predecessor.
+     * 
+     * @param parent           the parent element
+     * @param ns               the namespace
+     * @param elementName      the element name to find or create
+     * @param afterElementName the predecessor element name
+     * @return the found or created element
+     */
+    public Element findOrCreateChildNodeAfter(Element parent, EInvoiceNS ns,
+            String elementName, String afterElementName) {
+
+        // First try to find existing element
+        Element existing = findChildNode(parent, ns, elementName);
+        if (existing != null) {
+            return existing;
+        }
+
+        // Find the predecessor element and its next sibling
+        Element insertBefore = null;
+        Element afterElement = findChildNode(parent, ns, afterElementName);
+        if (afterElement != null) {
+            // Find next element sibling (skip text/whitespace nodes)
+            Node nextSibling = afterElement.getNextSibling();
+            while (nextSibling != null && nextSibling.getNodeType() != Node.ELEMENT_NODE) {
+                nextSibling = nextSibling.getNextSibling();
+            }
+            if (nextSibling != null) {
+                insertBefore = (Element) nextSibling;
+            }
+        }
+
+        // Use existing createChildNode method
+        return createChildNode(parent, ns, elementName, insertBefore);
+    }
+
+    /**
      * This helper method creates a new child node by name from a given parent
      * node.
      * <p>
