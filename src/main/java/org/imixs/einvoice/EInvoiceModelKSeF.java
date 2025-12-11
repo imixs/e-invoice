@@ -418,16 +418,19 @@ public class EInvoiceModelKSeF extends EInvoiceModel {
         super.setNetTotalAmount(value);
 
         Element element;
-
+        logger.info("│   ├──  setNetTotal for tax type=" + taxType);
         if ("2".equals(taxType)) {
             // EU: P_13_6_2 comes after P_13_6_1 (or after P_6 if no P_13_x exists)
             element = findOrCreateChildNodeAfter(fa, EInvoiceNS.KSEF, "P_13_6_2", "P_6");
+            logger.info("│   ├──  set P_13_6_2 = " + value);
         } else if ("3".equals(taxType)) {
             // Export: P_13_6_3 comes after P_13_6_2
             element = findOrCreateChildNodeAfter(fa, EInvoiceNS.KSEF, "P_13_6_3", "P_6");
+            logger.info("│   ├──  set P_13_6_3 = " + value);
         } else {
             // Poland: P_13_1 comes after P_6
             element = findOrCreateChildNodeAfter(fa, EInvoiceNS.KSEF, "P_13_1", "P_6");
+            logger.info("│   ├──  set P_13_1 = " + value);
         }
 
         element.setTextContent(value.setScale(2, RoundingMode.HALF_UP).toPlainString());
@@ -448,7 +451,7 @@ public class EInvoiceModelKSeF extends EInvoiceModel {
         if ("2".equals(taxType) || "3".equals(taxType)) {
             return;
         }
-
+        logger.info("│   ├──  setTaxTotalAmount for tax type=" + taxType + " P_14_1=" + value);
         super.setTaxTotalAmount(value);
         // P_14_1 must come directly after P_13_1
         Element element = findOrCreateChildNodeAfter(fa, EInvoiceNS.KSEF, "P_14_1", "P_13_1");
@@ -459,7 +462,7 @@ public class EInvoiceModelKSeF extends EInvoiceModel {
     @Override
     public void setGrandTotalAmount(BigDecimal value) {
         super.setGrandTotalAmount(value);
-
+        logger.info("│   ├──  setGrandTotalAmount for tax type=" + taxType);
         // Determine the correct predecessor based on taxType
         String afterElement;
         if ("2".equals(taxType)) {
@@ -473,7 +476,7 @@ public class EInvoiceModelKSeF extends EInvoiceModel {
                 afterElement = "P_13_1";
             }
         }
-
+        logger.info("│   ├──  set P_15 = " + value);
         Element element = findOrCreateChildNodeAfter(fa, EInvoiceNS.KSEF, "P_15", afterElement);
         element.setTextContent(value.setScale(2, RoundingMode.HALF_UP).toPlainString());
 
@@ -511,12 +514,13 @@ public class EInvoiceModelKSeF extends EInvoiceModel {
             // Update NIP
             if (newParty.getVatNumber() != null && !newParty.getVatNumber().isEmpty()) {
 
+                String vatID = newParty.getVatNumber().trim().toUpperCase();
+                vatID = vatID.replace(" ", "");
                 // for PL set NIP otherwise set NrID
-                String vatID = newParty.getVatNumber();
                 if (vatID.startsWith("PL")) {
-                    updateElementValue(daneIdent, EInvoiceNS.KSEF, "NIP", newParty.getVatNumber().substring(2));
+                    updateElementValue(daneIdent, EInvoiceNS.KSEF, "NIP", vatID.substring(2));
                 } else {
-                    updateElementValue(daneIdent, EInvoiceNS.KSEF, "NrID", newParty.getVatNumber());
+                    updateElementValue(daneIdent, EInvoiceNS.KSEF, "NrID", vatID);
                 }
 
             }
@@ -616,7 +620,11 @@ public class EInvoiceModelKSeF extends EInvoiceModel {
      * @param vatID the VAT identification number with country prefix
      */
     public void setTaxType(String vatID) {
+
+        logger.info("├── set tax type for : " + vatID);
+
         if (vatID == null || vatID.isBlank()) {
+            logger.info("├── undefined");
             return;
         }
 
@@ -624,6 +632,7 @@ public class EInvoiceModelKSeF extends EInvoiceModel {
 
         // Poland - domestic
         if (id.startsWith("PL")) {
+            logger.info("├── 1=PL");
             this.taxType = "1";
             return;
         }
@@ -632,12 +641,14 @@ public class EInvoiceModelKSeF extends EInvoiceModel {
         if (id.length() >= 2) {
             String countryCode = id.substring(0, 2);
             if (EU_COUNTRY_CODES.contains(countryCode)) {
+                logger.info("├── 2=EU");
                 this.taxType = "2";
                 return;
             }
         }
 
         // Non-EU country (export)
+        logger.info("├── 3 NON EU");
         this.taxType = "3";
     }
 
