@@ -595,10 +595,15 @@ public class EInvoiceModelKSeF extends EInvoiceModel {
         updateElementValue(faWiersz, EInvoiceNS.KSEF, "P_8B", String.valueOf((int) item.getQuantity()));
 
         // Unit price (P_9A in FA(3) - was P_9B in FA(2)!)
-        updateElementValue(faWiersz, EInvoiceNS.KSEF, "P_9A", String.format("%.2f", item.getNetPrice()));
+        updateElementValue(faWiersz, EInvoiceNS.KSEF, "P_9A",
+                BigDecimal.valueOf(item.getNetPrice()).setScale(2,
+                        RoundingMode.HALF_UP).toPlainString());
 
         // Net amount (P_11)
-        updateElementValue(faWiersz, EInvoiceNS.KSEF, "P_11", String.format("%.2f", item.getTotal()));
+        updateElementValue(faWiersz, EInvoiceNS.KSEF, "P_11",
+                BigDecimal.valueOf(item.getTotal()).setScale(2, RoundingMode.HALF_UP).toPlainString());
+
+        // item.getTotal().setScale(2, RoundingMode.HALF_UP).toPlainString()
 
         // VAT rate (P_12) if >0
         if (item.getTaxRate() > 0) {
