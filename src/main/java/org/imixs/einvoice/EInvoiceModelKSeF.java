@@ -8,7 +8,6 @@ import java.time.format.DateTimeFormatter;
 import java.time.format.DateTimeParseException;
 import java.util.LinkedHashSet;
 import java.util.Set;
-import java.util.UUID;
 
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
@@ -572,12 +571,11 @@ public class EInvoiceModelKSeF extends EInvoiceModel {
         // Line number (NrWierszaFa)
         updateElementValue(faWiersz, EInvoiceNS.KSEF, "NrWierszaFa", item.getId());
 
-        // UUID (new in FA(3)) - generate if not present
+        // UUID (new in FA(3)) - set only if present
         String uuid = item.getOrderReferenceId();
-        if (uuid == null || uuid.isEmpty()) {
-            uuid = UUID.randomUUID().toString();
+        if (uuid != null && !uuid.isEmpty()) {
+            updateElementValue(faWiersz, EInvoiceNS.KSEF, "UU_ID", uuid);
         }
-        updateElementValue(faWiersz, EInvoiceNS.KSEF, "UU_ID", uuid);
 
         // Description (P_7)
         if (item.getName() != null && !item.getName().isEmpty()) {
