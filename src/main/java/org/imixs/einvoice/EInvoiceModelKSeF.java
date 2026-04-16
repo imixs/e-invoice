@@ -391,9 +391,42 @@ public class EInvoiceModelKSeF extends EInvoiceModel {
         p1Element.setTextContent(formatter.format(value));
     }
 
+    /**
+     * The Due date is set in Platnosc/TerminPlatnosci/Termin
+     * 
+     * <Fa>
+     * ...
+     * <P_1>RECHNUNGSDATUM / InvoiceDate</P_1>
+     * ...
+     * <P_6>LEISTUNGSDATUM / PerformanceDate</P_6>
+     * ....
+     * <FaWiersz>
+     * ...
+     * </FaWiersz>
+     * <Platnosc>
+     * <TerminPlatnosci>
+     * <Termin>FÄLLIGKEIT / DueDate</Termin>
+     * </TerminPlatnosci>
+     * </Platnosc>
+     * </Fa>
+     */
     @Override
     public void setDueDateTime(LocalDate value) {
+        // after
+        Element platnoscElement = findOrCreateChildNodeAfter(fa, EInvoiceNS.KSEF, "Platnosc", "FaWiersz");
+        Element terminPlatnosciElement = this.findOrCreateChildNode(platnoscElement, EInvoiceNS.KSEF,
+                "TerminPlatnosci");
+
         super.setDueDateTime(value);
+        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd");
+        // termin is now the due date in FA(3)!
+        Element element = findOrCreateChildNode(terminPlatnosciElement, EInvoiceNS.KSEF, "Termin");
+        element.setTextContent(formatter.format(value));
+    }
+
+    /** Set KSeF Performance Date */
+    public void setPerformanceDateTime(LocalDate value) {
+
         DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd");
         // P_6 is now the due date in FA(3)!
         Element element = findOrCreateChildNode(fa, EInvoiceNS.KSEF, "P_6");
@@ -469,10 +502,15 @@ public class EInvoiceModelKSeF extends EInvoiceModel {
         } else if ("3".equals(taxType)) {
             afterElement = "P_13_6_3";
         } else {
-            // Poland: P_15 comes after P_14_1 (or P_13_1 if no tax)
+            // Poland: P_15 comes after P_14_1 or P_14_1w (or P_13_1 if no tax)
             afterElement = "P_14_1";
-            if (findChildNode(fa, EInvoiceNS.KSEF, "P_14_1") == null) {
-                afterElement = "P_13_1";
+
+            if (findChildNode(fa, EInvoiceNS.KSEF, "P_14_1W") != null) {
+                afterElement = "P_14_1W";
+            } else {
+                if (findChildNode(fa, EInvoiceNS.KSEF, "P_14_1") == null) {
+                    afterElement = "P_13_1";
+                }
             }
         }
         logger.info("│   ├──  set P_15 = " + value);
@@ -603,10 +641,10 @@ public class EInvoiceModelKSeF extends EInvoiceModel {
 
         // item.getTotal().setScale(2, RoundingMode.HALF_UP).toPlainString()
 
-        // VAT rate (P_12) - set even if 0.00
-        // if (item.getTaxRate() > 0) {
-        updateElementValue(faWiersz, EInvoiceNS.KSEF, "P_12", String.valueOf((int) item.getTaxRate()));
-        // }
+        // VAT rate (P_12) - only if > 0.00
+        if (item.getTaxRate() > 0) {
+            updateElementValue(faWiersz, EInvoiceNS.KSEF, "P_12", String.valueOf((int) item.getTaxRate()));
+        }
     }
 
     /**

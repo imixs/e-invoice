@@ -391,12 +391,19 @@ public abstract class EInvoiceModel {
             return existing;
         }
 
-        // Find the predecessor element and its next sibling
+        // Find the LAST occurrence of the predecessor element
+        Element lastAfterElement = null;
+        Set<Element> afterElements = findChildNodesByName(parent, ns, afterElementName);
+        if (!afterElements.isEmpty()) {
+            for (Element e : afterElements) {
+                lastAfterElement = e; // last iteration wins
+            }
+        }
+
+        // Find the next element sibling after the LAST occurrence
         Element insertBefore = null;
-        Element afterElement = findChildNode(parent, ns, afterElementName);
-        if (afterElement != null) {
-            // Find next element sibling (skip text/whitespace nodes)
-            Node nextSibling = afterElement.getNextSibling();
+        if (lastAfterElement != null) {
+            Node nextSibling = lastAfterElement.getNextSibling();
             while (nextSibling != null && nextSibling.getNodeType() != Node.ELEMENT_NODE) {
                 nextSibling = nextSibling.getNextSibling();
             }
