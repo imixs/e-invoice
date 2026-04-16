@@ -605,10 +605,10 @@ public class EInvoiceModelKSeF extends EInvoiceModel {
 
         // item.getTotal().setScale(2, RoundingMode.HALF_UP).toPlainString()
 
-        // VAT rate (P_12) if >0
-        if (item.getTaxRate() > 0) {
-            updateElementValue(faWiersz, EInvoiceNS.KSEF, "P_12", String.valueOf((int) item.getTaxRate()));
-        }
+        // VAT rate (P_12) - set even if 0.00
+        // if (item.getTaxRate() > 0) {
+        updateElementValue(faWiersz, EInvoiceNS.KSEF, "P_12", String.valueOf((int) item.getTaxRate()));
+        // }
     }
 
     /**
