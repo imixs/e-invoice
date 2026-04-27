@@ -412,14 +412,16 @@ public class EInvoiceModelKSeF extends EInvoiceModel {
      */
     @Override
     public void setDueDateTime(LocalDate value) {
-        // after
+        // Ensure Platnosc exists after the FaWiersz elements
         Element platnoscElement = findOrCreateChildNodeAfter(fa, EInvoiceNS.KSEF, "Platnosc", "FaWiersz");
-        Element terminPlatnosciElement = this.findOrCreateChildNode(platnoscElement, EInvoiceNS.KSEF,
+
+        // TerminPlatnosci must be the FIRST child of Platnosc
+        Element terminPlatnosciElement = findOrCreateChildNodeFirst(platnoscElement, EInvoiceNS.KSEF,
                 "TerminPlatnosci");
 
         super.setDueDateTime(value);
         DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd");
-        // termin is now the due date in FA(3)!
+        // Termin holds the actual due date in FA(3)
         Element element = findOrCreateChildNode(terminPlatnosciElement, EInvoiceNS.KSEF, "Termin");
         element.setTextContent(formatter.format(value));
     }
@@ -590,9 +592,13 @@ public class EInvoiceModelKSeF extends EInvoiceModel {
 
     /**
      * Adds a new TradeLineItem into the XML tree.
-     * Line items are inserted before Adnotacje or P_13_1.
-     * FA(3) has different field mappings than FA(2)!
-     * 
+     * <p>
+     * The KSeF FA(3) schema enforces a strict sequence inside the Fa element:
+     * FaWiersz must appear BEFORE Rozliczenie, Platnosc, WarunkiTransakcji
+     * and Zamowienie. Since the template may already contain a Platnosc block
+     * (with bank accounts, payment type), each new FaWiersz must be inserted
+     * before the first existing successor element.
+     *
      * @param item
      */
     @Override
@@ -603,8 +609,28 @@ public class EInvoiceModelKSeF extends EInvoiceModel {
 
         super.setTradeLineItem(item);
 
-        // Create FaWiersz element (append in FA)
-        Element faWiersz = createChildNode(fa, EInvoiceNS.KSEF, "FaWiersz");
+        // Find the first existing successor element to determine the
+        // schema-correct insert position for FaWiersz.
+        Element insertBefore = null;
+        String prefix = getPrefix(EInvoiceNS.KSEF);
+        String[] successors = { "Rozliczenie", "Platnosc", "WarunkiTransakcji", "Zamowienie" };
+        Node child = fa.getFirstChild();
+        outer: while (child != null) {
+            if (child.getNodeType() == Node.ELEMENT_NODE) {
+                String childName = child.getNodeName();
+                for (String name : successors) {
+                    if ((prefix + name).equals(childName)) {
+                        insertBefore = (Element) child;
+                        break outer;
+                    }
+                }
+            }
+            child = child.getNextSibling();
+        }
+
+        // Create FaWiersz at the schema-correct position
+        // (insertBefore == null -> appended at the end, which is also valid)
+        Element faWiersz = createChildNode(fa, EInvoiceNS.KSEF, "FaWiersz", insertBefore);
 
         // Line number (NrWierszaFa)
         updateElementValue(faWiersz, EInvoiceNS.KSEF, "NrWierszaFa", item.getId());
@@ -639,12 +665,11 @@ public class EInvoiceModelKSeF extends EInvoiceModel {
         updateElementValue(faWiersz, EInvoiceNS.KSEF, "P_11",
                 BigDecimal.valueOf(item.getTotal()).setScale(2, RoundingMode.HALF_UP).toPlainString());
 
-        // item.getTotal().setScale(2, RoundingMode.HALF_UP).toPlainString()
-
         // VAT rate (P_12) - only if > 0.00
         if (item.getTaxRate() > 0) {
             updateElementValue(faWiersz, EInvoiceNS.KSEF, "P_12", String.valueOf((int) item.getTaxRate()));
         }
+
     }
 
     /**

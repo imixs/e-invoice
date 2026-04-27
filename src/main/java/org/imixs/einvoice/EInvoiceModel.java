@@ -417,6 +417,96 @@ public abstract class EInvoiceModel {
     }
 
     /**
+     * Finds or creates a child element as the FIRST child element of the parent.
+     * If the element already exists, it is returned as-is (regardless of its
+     * current position).
+     * If it doesn't exist, it is created and inserted before the first existing
+     * child element of the parent.
+     *
+     * @param parent      the parent element
+     * @param ns          the namespace
+     * @param elementName the element name to find or create
+     * @return the found or created element
+     */
+    public Element findOrCreateChildNodeFirst(Element parent, EInvoiceNS ns, String elementName) {
+
+        // First try to find existing element
+        Element existing = findChildNode(parent, ns, elementName);
+        if (existing != null) {
+            return existing;
+        }
+
+        // Find the first child element of the parent (skip text nodes, comments, etc.)
+        Element firstChildElement = null;
+        Node child = parent.getFirstChild();
+        while (child != null) {
+            if (child.getNodeType() == Node.ELEMENT_NODE) {
+                firstChildElement = (Element) child;
+                break;
+            }
+            child = child.getNextSibling();
+        }
+
+        // Use existing createChildNode method
+        // If firstChildElement is null, the parent is empty -> appendChild via null
+        return createChildNode(parent, ns, elementName, firstChildElement);
+    }
+
+    /**
+     * Finds or creates a child element positioned before the FIRST occurrence
+     * of any of the given successor elements.
+     * If the element already exists, it is returned as-is (regardless of its
+     * current position).
+     * If it doesn't exist, the parent's children are scanned in document order
+     * and the new element is inserted before whichever of the named successor
+     * elements appears first. If none of them exists in the parent, the new
+     * element is appended at the end.
+     *
+     * Useful for enforcing strict XSD sequence ordering when multiple later
+     * elements may already be present in the document.
+     *
+     * @param parent             the parent element
+     * @param ns                 the namespace
+     * @param elementName        the element name to find or create
+     * @param beforeElementNames the names of possible successor elements
+     *                           (varargs, document order is respected)
+     * @return the found or created element
+     */
+    public Element findOrCreateChildNodeBefore(Element parent, EInvoiceNS ns,
+            String elementName, String... beforeElementNames) {
+
+        // First try to find existing element
+        Element existing = findChildNode(parent, ns, elementName);
+        if (existing != null) {
+            return existing;
+        }
+
+        // Walk the parent's children in document order and find the first one
+        // whose tag name matches any of the given successor names.
+        Element firstSuccessor = null;
+        String prefix = getPrefix(ns);
+        Node child = parent.getFirstChild();
+        while (child != null) {
+            if (child.getNodeType() == Node.ELEMENT_NODE) {
+                String childName = child.getNodeName();
+                for (String name : beforeElementNames) {
+                    if ((prefix + name).equals(childName)) {
+                        firstSuccessor = (Element) child;
+                        break;
+                    }
+                }
+                if (firstSuccessor != null) {
+                    break;
+                }
+            }
+            child = child.getNextSibling();
+        }
+
+        // Insert before that successor (or append if none was found)
+        return createChildNode(parent, ns, elementName, firstSuccessor);
+    }
+
+    /**
      * This helper method creates a new child node by name from a given parent
      * node.
      * <p>
