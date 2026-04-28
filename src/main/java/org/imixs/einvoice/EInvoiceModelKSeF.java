@@ -220,19 +220,19 @@ public class EInvoiceModelKSeF extends EInvoiceModel {
 
         // Net total (P_13_1)
         element = findChildNode(fa, EInvoiceNS.KSEF, "P_13_1");
-        if (element != null) {
+        if (element != null && !element.getTextContent().isBlank()) {
             setNetTotalAmount(new BigDecimal(element.getTextContent()));
         }
 
         // VAT total (P_14_1)
         element = findChildNode(fa, EInvoiceNS.KSEF, "P_14_1");
-        if (element != null) {
+        if (element != null && !element.getTextContent().isBlank()) {
             setTaxTotalAmount(new BigDecimal(element.getTextContent()));
         }
 
         // Gross total (P_15)
         element = findChildNode(fa, EInvoiceNS.KSEF, "P_15");
-        if (element != null) {
+        if (element != null && !element.getTextContent().isBlank()) {
             setGrandTotalAmount(new BigDecimal(element.getTextContent()));
         }
     }
