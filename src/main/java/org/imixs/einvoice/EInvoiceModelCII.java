@@ -402,6 +402,19 @@ public class EInvoiceModelCII extends EInvoiceModel {
         updateElementValue(applicableHeaderTradeAgreement, EInvoiceNS.RAM, "BuyerReference", value);
     }
 
+    /**
+     * Updates the payment terms description (BT-20).
+     * 
+     * <ram:SpecifiedTradePaymentTerms>
+     * <ram:Description>Payment due by 10.03.2025</ram:Description>
+     * </ram:SpecifiedTradePaymentTerms>
+     */
+    public void setPaymentTermsDescription(String value) {
+        Element paymentTerms = findOrCreateChildNode(applicableHeaderTradeSettlement, EInvoiceNS.RAM,
+                "SpecifiedTradePaymentTerms");
+        updateElementValue(paymentTerms, EInvoiceNS.RAM, "Description", value);
+    }
+
     @Override
     public void setNetTotalAmount(BigDecimal value) {
         super.setNetTotalAmount(value);
