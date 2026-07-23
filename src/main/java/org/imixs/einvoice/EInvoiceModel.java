@@ -46,6 +46,7 @@ public abstract class EInvoiceModel {
     private BigDecimal taxTotalAmount = new BigDecimal("0.00");
     private BigDecimal netTotalAmount = new BigDecimal("0.00");
     private BigDecimal taxRate = new BigDecimal("0.00");
+    private String currency = "EUR"; // Default currency code (ISO 4217)
     private Set<TradeParty> tradeParties = null;
     private Set<TradeLineItem> tradeLineItems = null;
 
@@ -111,6 +112,14 @@ public abstract class EInvoiceModel {
 
     public void setDueDateTime(LocalDate value) {
         dueDateTime = value;
+    }
+
+    public String getCurrency() {
+        return currency;
+    }
+
+    public void setCurrency(String value) {
+        this.currency = value;
     }
 
     public BigDecimal getGrandTotalAmount() {

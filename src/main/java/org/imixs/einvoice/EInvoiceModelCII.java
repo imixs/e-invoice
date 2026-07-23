@@ -391,6 +391,17 @@ public class EInvoiceModelCII extends EInvoiceModel {
         issuerAssignedID.setTextContent(value);
     }
 
+    /**
+     * Update Buyer Reference (BT-10)
+     * 
+     * <ram:BuyerReference>n/a</ram:BuyerReference>
+     */
+    @Override
+    public void setBuyerReference(String value) {
+        super.setBuyerReference(value);
+        updateElementValue(applicableHeaderTradeAgreement, EInvoiceNS.RAM, "BuyerReference", value);
+    }
+
     @Override
     public void setNetTotalAmount(BigDecimal value) {
         super.setNetTotalAmount(value);
@@ -456,7 +467,7 @@ public class EInvoiceModelCII extends EInvoiceModel {
                 EInvoiceNS.RAM,
                 "TaxTotalAmount");
         amountElement.setTextContent(value.toPlainString());
-        amountElement.setAttribute("currencyID", "EUR");
+        amountElement.setAttribute("currencyID", getCurrency());
 
         // Update ApplicableTradeTax/CalculatedAmount
         Element applicableTradeTax = findOrCreateChildNode(applicableHeaderTradeSettlement,
@@ -489,6 +500,17 @@ public class EInvoiceModelCII extends EInvoiceModel {
         }
         tax.setTextContent(value.toPlainString());
 
+    }
+
+    /**
+     * Update the invoice currency code
+     * 
+     * <ram:InvoiceCurrencyCode>EUR</ram:InvoiceCurrencyCode>
+     */
+    @Override
+    public void setCurrency(String value) {
+        super.setCurrency(value);
+        updateElementValue(applicableHeaderTradeSettlement, EInvoiceNS.RAM, "InvoiceCurrencyCode", value);
     }
 
     /**
@@ -584,7 +606,10 @@ public class EInvoiceModelCII extends EInvoiceModel {
                     taxRegistration = getDoc().createElement(getPrefix(EInvoiceNS.RAM) + "SpecifiedTaxRegistration");
                     tradePartyElement.appendChild(taxRegistration);
                 }
-                updateElementValue(taxRegistration, EInvoiceNS.RAM, "ID", newParty.getVatNumber());
+                Element idElement = updateElementValue(taxRegistration, EInvoiceNS.RAM, "ID", newParty.getVatNumber());
+                if (idElement != null) {
+                    idElement.setAttribute("schemeID", "VA");
+                }
             }
         }
     }
