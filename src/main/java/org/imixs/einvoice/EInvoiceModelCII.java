@@ -348,7 +348,6 @@ public class EInvoiceModelCII extends EInvoiceModel {
                     }
                 }
             }
-
             items.add(item);
         }
 
@@ -413,106 +412,6 @@ public class EInvoiceModelCII extends EInvoiceModel {
         Element paymentTerms = findOrCreateChildNode(applicableHeaderTradeSettlement, EInvoiceNS.RAM,
                 "SpecifiedTradePaymentTerms");
         updateElementValue(paymentTerms, EInvoiceNS.RAM, "Description", value);
-    }
-
-    @Override
-    public void setNetTotalAmount(BigDecimal value) {
-        super.setNetTotalAmount(value);
-        // Update LineTotalAmount
-        Element lineTotalElement = findChildNode(specifiedTradeSettlementHeaderMonetarySummation, EInvoiceNS.RAM,
-                "LineTotalAmount");
-        if (lineTotalElement != null) {
-            lineTotalElement.setTextContent(value.toPlainString());
-            // Update auch den internen Wert
-            super.setNetTotalAmount(value);
-        }
-        // Update TaxBasisTotalAmount
-        Element taxBasisElement = findChildNode(specifiedTradeSettlementHeaderMonetarySummation, EInvoiceNS.RAM,
-                "TaxBasisTotalAmount");
-        if (taxBasisElement != null) {
-            taxBasisElement.setTextContent(value.toPlainString());
-        }
-
-        // Update ApplicationTradeTax
-        Element applicableTradeTax = findOrCreateChildNode(applicableHeaderTradeSettlement,
-                EInvoiceNS.RAM, "ApplicableTradeTax");
-        updateElementValue(applicableTradeTax, EInvoiceNS.RAM, "BasisAmount", value.toPlainString());
-
-    }
-
-    @Override
-    public void setGrandTotalAmount(BigDecimal value) {
-        super.setGrandTotalAmount(value);
-        // Update GrandTotalAmount
-        Element amountElement = findChildNode(specifiedTradeSettlementHeaderMonetarySummation, EInvoiceNS.RAM,
-                "GrandTotalAmount");
-        if (amountElement != null) {
-            amountElement.setTextContent(value.toPlainString());
-        }
-        amountElement = findChildNode(specifiedTradeSettlementHeaderMonetarySummation, EInvoiceNS.RAM,
-                "DuePayableAmount");
-        if (amountElement != null) {
-            amountElement.setTextContent(value.toPlainString());
-        }
-
-        // In case we have no tax then this is also the value for TaxBasisTotalAmount
-        if (getTaxRate().doubleValue() == 0) {
-            updateElementValue(specifiedTradeSettlementHeaderMonetarySummation, EInvoiceNS.RAM, "LineTotalAmount",
-                    value.toPlainString());
-            updateElementValue(specifiedTradeSettlementHeaderMonetarySummation, EInvoiceNS.RAM, "TaxBasisTotalAmount",
-                    value.toPlainString());
-
-            // and also update LineTotalAmount and BasisAmount in ApplicableTradeTax
-            Element applicableTradeTax = findOrCreateChildNode(applicableHeaderTradeSettlement,
-                    EInvoiceNS.RAM, "ApplicableTradeTax");
-            updateElementValue(applicableTradeTax, EInvoiceNS.RAM, "BasisAmount", value.toPlainString());
-        }
-
-    }
-
-    /**
-     * <ram:TaxTotalAmount currencyID="EUR">0.00</ram:TaxTotalAmount>
-     */
-    @Override
-    public void setTaxTotalAmount(BigDecimal value) {
-        super.setTaxTotalAmount(value);
-        Element amountElement = findOrCreateChildNode(specifiedTradeSettlementHeaderMonetarySummation,
-                EInvoiceNS.RAM,
-                "TaxTotalAmount");
-        amountElement.setTextContent(value.toPlainString());
-        amountElement.setAttribute("currencyID", getCurrency());
-
-        // Update ApplicableTradeTax/CalculatedAmount
-        Element applicableTradeTax = findOrCreateChildNode(applicableHeaderTradeSettlement,
-                EInvoiceNS.RAM, "ApplicableTradeTax");
-        updateElementValue(applicableTradeTax, EInvoiceNS.RAM, "CalculatedAmount", value.toPlainString());
-
-    }
-
-    /**
-     * Set ApplicableTradeTax and code
-     * 
-     * <ram:TypeCode>VAT</ram:TypeCode>
-     * <ram:CategoryCode>S</ram:CategoryCode>
-     * <ram:RateApplicablePercent>0.00</ram:RateApplicablePercent>
-     *
-     * If tax rate == 0 then teh code is 'Z' otherwise 'S'
-     */
-    @Override
-    public void setTaxRate(BigDecimal value) {
-        super.setTaxRate(value);
-
-        Element settlement = findOrCreateChildNode(applicableHeaderTradeSettlement, EInvoiceNS.RAM,
-                "ApplicableTradeTax");
-        Element cat = findOrCreateChildNode(settlement, EInvoiceNS.RAM, "CategoryCode");
-        Element tax = findOrCreateChildNode(settlement, EInvoiceNS.RAM, "RateApplicablePercent");
-        if (value.doubleValue() > 0) {
-            cat.setTextContent("S");
-        } else {
-            cat.setTextContent("Z");
-        }
-        tax.setTextContent(value.toPlainString());
-
     }
 
     /**
@@ -633,12 +532,17 @@ public class EInvoiceModelCII extends EInvoiceModel {
      * @param item
      */
     @Override
-    public void setTradeLineItem(TradeLineItem item) {
+    public void addTradeLineItem(TradeLineItem item) {
         if (item == null) {
             return;
         }
 
-        super.setTradeLineItem(item);
+        super.addTradeLineItem(item);
+
+        // If an XML element for this LineID already exists (e.g. because
+        // addTradeLineItem was called twice for the same position), remove
+        // it first so we don't end up with duplicate line items in the XML.
+        removeExistingLineItemElement(item.getId());
 
         // create main tags...
         // Insert before ApplicableHeaderTradeAgreement !!
@@ -717,6 +621,112 @@ public class EInvoiceModelCII extends EInvoiceModel {
                 "LineTotalAmount");
         totalAmount.setTextContent(String.valueOf(item.getTotal()));
 
+    }
+
+    /**
+     * Clears all trade line items from the model AND removes all
+     * {@code IncludedSupplyChainTradeLineItem} XML elements from the DOM,
+     * so model and XML stay in sync when an invoice is rebuilt from
+     * scratch (e.g. re-processing the same template a second time).
+     */
+    @Override
+    public void resetTradeLineItems() {
+        super.resetTradeLineItems();
+        Set<Element> existingLineItems = findChildNodesByName(supplyChainTradeTransaction,
+                EInvoiceNS.RAM, "IncludedSupplyChainTradeLineItem");
+        for (Element existing : existingLineItems) {
+            supplyChainTradeTransaction.removeChild(existing);
+        }
+    }
+
+    /**
+     * Removes an existing {@code IncludedSupplyChainTradeLineItem} XML
+     * element that has the given LineID, if present.
+     * <p>
+     * Used by {@link #addTradeLineItem(TradeLineItem)} to keep the XML in
+     * sync with the model when a line item with the same ID is added
+     * more than once.
+     */
+    private void removeExistingLineItemElement(String lineId) {
+        if (lineId == null || lineId.isEmpty()) {
+            return;
+        }
+        Set<Element> existingLineItems = findChildNodesByName(supplyChainTradeTransaction,
+                EInvoiceNS.RAM, "IncludedSupplyChainTradeLineItem");
+        for (Element existing : existingLineItems) {
+            Element docLine = findChildNode(existing, EInvoiceNS.RAM, "AssociatedDocumentLineDocument");
+            if (docLine == null) {
+                continue;
+            }
+            Element idElement = findChildNode(docLine, EInvoiceNS.RAM, "LineID");
+            if (idElement != null && lineId.equals(idElement.getTextContent())) {
+                supplyChainTradeTransaction.removeChild(existing);
+                break; // LineID is unique, no need to keep searching
+            }
+        }
+    }
+
+    /**
+     * Writes the recalculated totals and the per-rate VAT breakdown into the
+     * XML structure.
+     * <p>
+     * Called automatically by {@link EInvoiceModel#recalculateTotals()}
+     * whenever a line item is added. Removes all existing
+     * {@code ApplicableTradeTax} blocks on header level and re-creates one
+     * block per distinct tax rate (BG-23 VAT BREAKDOWN), so invoices with
+     * mixed tax rates are represented correctly.
+     */
+    @Override
+    protected void updateTradeTax() {
+
+        // Remove all existing ApplicableTradeTax blocks on header level -
+        // they will be fully re-created below from the current breakdown.
+        Set<Element> existingTaxBlocks = findChildNodesByName(applicableHeaderTradeSettlement,
+                EInvoiceNS.RAM, "ApplicableTradeTax");
+        for (Element existing : existingTaxBlocks) {
+            applicableHeaderTradeSettlement.removeChild(existing);
+        }
+        // Determine the insertion point once, before the loop
+        Element insertBeforeElement = findChildNode(applicableHeaderTradeSettlement, EInvoiceNS.RAM,
+                "SpecifiedTradePaymentTerms");
+        if (insertBeforeElement == null) {
+            insertBeforeElement = findChildNode(applicableHeaderTradeSettlement, EInvoiceNS.RAM,
+                    "SpecifiedTradeSettlementHeaderMonetarySummation");
+        }
+        // Re-create one ApplicableTradeTax block per distinct tax rate
+        for (TaxBreakdown breakdown : getTaxBreakdown()) {
+            Element applicableTradeTax = createChildNode(applicableHeaderTradeSettlement,
+                    EInvoiceNS.RAM, "ApplicableTradeTax", insertBeforeElement);
+
+            updateElementValue(applicableTradeTax, EInvoiceNS.RAM, "CalculatedAmount",
+                    breakdown.getTaxAmount().toPlainString());
+            updateElementValue(applicableTradeTax, EInvoiceNS.RAM, "TypeCode", "VAT");
+            updateElementValue(applicableTradeTax, EInvoiceNS.RAM, "BasisAmount",
+                    breakdown.getBasisAmount().toPlainString());
+            updateElementValue(applicableTradeTax, EInvoiceNS.RAM, "CategoryCode",
+                    breakdown.getRate().doubleValue() > 0 ? "S" : "Z");
+            updateElementValue(applicableTradeTax, EInvoiceNS.RAM, "RateApplicablePercent",
+                    breakdown.getRate().toPlainString());
+        }
+
+        // Update the header monetary summation from the recalculated totals
+        BigDecimal net = getNetTotalAmount();
+        BigDecimal tax = getTaxTotalAmount();
+        BigDecimal grand = getGrandTotalAmount();
+
+        updateElementValue(specifiedTradeSettlementHeaderMonetarySummation, EInvoiceNS.RAM,
+                "LineTotalAmount", net.toPlainString());
+        updateElementValue(specifiedTradeSettlementHeaderMonetarySummation, EInvoiceNS.RAM,
+                "TaxBasisTotalAmount", net.toPlainString());
+        Element taxTotalElement = updateElementValue(specifiedTradeSettlementHeaderMonetarySummation, EInvoiceNS.RAM,
+                "TaxTotalAmount", tax.toPlainString());
+        if (taxTotalElement != null) {
+            taxTotalElement.setAttribute("currencyID", getCurrency());
+        }
+        updateElementValue(specifiedTradeSettlementHeaderMonetarySummation, EInvoiceNS.RAM,
+                "GrandTotalAmount", grand.toPlainString());
+        updateElementValue(specifiedTradeSettlementHeaderMonetarySummation, EInvoiceNS.RAM,
+                "DuePayableAmount", grand.toPlainString());
     }
 
 }

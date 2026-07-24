@@ -3,9 +3,12 @@ package org.imixs.einvoice;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.math.BigDecimal;
+import java.math.RoundingMode;
 import java.time.LocalDate;
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.Iterator;
+import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
 import java.util.Map;
 import java.util.Set;
@@ -49,6 +52,7 @@ public abstract class EInvoiceModel {
     private String currency = "EUR"; // Default currency code (ISO 4217)
     private Set<TradeParty> tradeParties = null;
     private Set<TradeLineItem> tradeLineItems = null;
+    private Map<BigDecimal, TaxBreakdown> taxBreakdownByRate = new LinkedHashMap<>();
 
     private final Map<EInvoiceNS, String> URI_BY_NAMESPACE = new HashMap<>();
     private final Map<EInvoiceNS, String> PREFIX_BY_NAMESPACE = new HashMap<>();
@@ -130,20 +134,12 @@ public abstract class EInvoiceModel {
         grandTotalAmount = value;
     }
 
-    public void setGrandTotalAmount(Double value) {
-        setGrandTotalAmount(BigDecimal.valueOf(value));
-    }
-
     public BigDecimal getTaxRate() {
         return taxRate;
     }
 
     public void setTaxRate(BigDecimal value) {
-        this.taxRate = value;
-    }
-
-    public void setTaxRate(Double value) {
-        setTaxRate(BigDecimal.valueOf(value));
+        taxRate = value;
     }
 
     public BigDecimal getTaxTotalAmount() {
@@ -154,20 +150,12 @@ public abstract class EInvoiceModel {
         taxTotalAmount = value;
     }
 
-    public void setTaxTotalAmount(Double value) {
-        setTaxTotalAmount(BigDecimal.valueOf(value));
-    }
-
     public BigDecimal getNetTotalAmount() {
         return netTotalAmount;
     }
 
     public void setNetTotalAmount(BigDecimal value) {
         netTotalAmount = value;
-    }
-
-    public void setNetTotalAmount(Double value) {
-        setNetTotalAmount(BigDecimal.valueOf(value));
     }
 
     /**
@@ -264,7 +252,7 @@ public abstract class EInvoiceModel {
      * 
      * @param item
      */
-    public void setTradeLineItem(TradeLineItem item) {
+    public void addTradeLineItem(TradeLineItem item) {
 
         if (item == null) {
             return;
@@ -278,6 +266,17 @@ public abstract class EInvoiceModel {
 
         // Add new party
         tradeLineItems.add(item);
+
+        // Header totals (Net/Tax/Grand) and per-rate breakdown are always
+        // derived from the line items now, not from external header values.
+        recalculateTotals();
+    }
+
+    /**
+     * Clears all trade line items
+     */
+    public void resetTradeLineItems() {
+        tradeLineItems = new LinkedHashSet<TradeLineItem>();
     }
 
     /**
@@ -300,6 +299,52 @@ public abstract class EInvoiceModel {
         }
         // not found
         return null;
+    }
+
+    /**
+     * Recalculates NetTotalAmount, the per-rate tax breakdown and
+     * GrandTotalAmount from the current set of trade line items, then
+     * delegates to the concrete model implementation to update the XML.
+     */
+    protected void recalculateTotals() {
+        taxBreakdownByRate = new LinkedHashMap<>();
+        BigDecimal net = BigDecimal.ZERO;
+
+        for (TradeLineItem item : getTradeLineItems()) {
+            BigDecimal lineTotal = BigDecimal.valueOf(item.getTotal());
+            BigDecimal rate = BigDecimal.valueOf(item.getTaxRate());
+
+            net = net.add(lineTotal);
+
+            TaxBreakdown breakdown = taxBreakdownByRate.computeIfAbsent(rate, TaxBreakdown::new);
+            breakdown.addAmount(lineTotal);
+        }
+
+        BigDecimal tax = BigDecimal.ZERO;
+        for (TaxBreakdown b : taxBreakdownByRate.values()) {
+            tax = tax.add(b.getTaxAmount());
+        }
+
+        netTotalAmount = net.setScale(2, RoundingMode.HALF_UP);
+        taxTotalAmount = tax.setScale(2, RoundingMode.HALF_UP);
+        grandTotalAmount = net.add(tax).setScale(2, RoundingMode.HALF_UP);
+
+        // Let the concrete model write the recalculated totals and the
+        // per-rate breakdown into its own XML structure.
+        updateTradeTax();
+    }
+
+    /**
+     * Hook called whenever the trade line items change and the totals /
+     * tax breakdown have been recalculated. Concrete model implementations
+     * must override this to write NetTotalAmount, TaxTotalAmount,
+     * GrandTotalAmount and the per-rate VAT breakdown into their XML
+     * structure.
+     */
+    protected abstract void updateTradeTax();
+
+    public Collection<TaxBreakdown> getTaxBreakdown() {
+        return taxBreakdownByRate.values();
     }
 
     /**
@@ -672,4 +717,35 @@ public abstract class EInvoiceModel {
         }
     }
 
+    /**
+     * Represents one VAT breakdown group (BG-23): all line items sharing
+     * the same tax rate, aggregated into a basis amount and a calculated
+     * tax amount.
+     */
+    public static class TaxBreakdown {
+        private final BigDecimal rate;
+        private BigDecimal basisAmount = BigDecimal.ZERO;
+        private BigDecimal taxAmount = BigDecimal.ZERO;
+
+        public TaxBreakdown(BigDecimal rate) {
+            this.rate = rate;
+        }
+
+        public BigDecimal getRate() {
+            return rate;
+        }
+
+        public BigDecimal getBasisAmount() {
+            return basisAmount;
+        }
+
+        public BigDecimal getTaxAmount() {
+            return taxAmount;
+        }
+
+        void addAmount(BigDecimal amount) {
+            basisAmount = basisAmount.add(amount).setScale(2, RoundingMode.HALF_UP);
+            taxAmount = basisAmount.multiply(rate).divide(new BigDecimal("100"), 2, RoundingMode.HALF_UP);
+        }
+    }
 }

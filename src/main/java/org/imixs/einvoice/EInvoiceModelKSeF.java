@@ -602,12 +602,12 @@ public class EInvoiceModelKSeF extends EInvoiceModel {
      * @param item
      */
     @Override
-    public void setTradeLineItem(TradeLineItem item) {
+    public void addTradeLineItem(TradeLineItem item) {
         if (item == null) {
             return;
         }
 
-        super.setTradeLineItem(item);
+        super.addTradeLineItem(item);
 
         // Find the first existing successor element to determine the
         // schema-correct insert position for FaWiersz.
@@ -733,5 +733,10 @@ public class EInvoiceModelKSeF extends EInvoiceModel {
      */
     public String getTaxType() {
         return this.taxType;
+    }
+
+    @Override
+    protected void updateTradeTax() {
+        // no operation - handeled manually
     }
 }
