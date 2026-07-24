@@ -249,6 +249,13 @@ public abstract class EInvoiceModel {
     /**
      * Adds a new Trade line item. If a item with this id already exists, the method
      * removes first the existing item.
+     * <p>
+     * If the item does not carry an id (BT-126 / LineID), a fallback id is
+     * assigned based on the current number of line items already added
+     * (size + 1). This guarantees an invoice never ends up with an
+     * empty/missing line id - regardless of the concrete model
+     * implementation (CII, UBL, ...) - even if the caller's source data
+     * did not supply a proper position number.
      * 
      * @param item
      */
@@ -256,6 +263,12 @@ public abstract class EInvoiceModel {
 
         if (item == null) {
             return;
+        }
+
+        if (item.getId() == null || item.getId().isBlank()) {
+            String fallbackId = String.valueOf(getTradeLineItems().size() + 1);
+            logger.warning("TradeLineItem without id - assigning fallback id: " + fallbackId);
+            item.setId(fallbackId);
         }
 
         // Remove existing items of same id (if exists)
@@ -273,7 +286,14 @@ public abstract class EInvoiceModel {
     }
 
     /**
-     * Clears all trade line items
+     * Clears all trade line items.
+     * <p>
+     * Concrete model implementations should override this (calling
+     * {@code super.resetTradeLineItems()}) to also remove their
+     * corresponding XML line item elements (e.g.
+     * {@code IncludedSupplyChainTradeLineItem} for CII, or
+     * {@code InvoiceLine} for UBL) from the DOM, so model and XML stay in
+     * sync when an invoice is rebuilt from scratch.
      */
     public void resetTradeLineItems() {
         tradeLineItems = new LinkedHashSet<TradeLineItem>();
