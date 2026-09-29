@@ -112,6 +112,12 @@ public class EInvoiceModelCII extends EInvoiceModel {
             setId(element.getTextContent());
         }
 
+        // read invoice type code
+        element = findChildNode(exchangedDocument, EInvoiceNS.RAM, "TypeCode");
+        if (element != null) {
+            setInvoiceTypeCode(element.getTextContent());
+        }
+
         // read Date time
         element = findChildNode(exchangedDocument, EInvoiceNS.RAM, "IssueDateTime");
         if (element != null) {
@@ -362,6 +368,21 @@ public class EInvoiceModelCII extends EInvoiceModel {
     public void setId(String value) {
         super.setId(value);
         Element element = findOrCreateChildNode(exchangedDocument, EInvoiceNS.RAM, "ID");
+        element.setTextContent(value);
+    }
+
+    /**
+     * Update TypeCode
+     * 
+     * 380 - Commercial Invoice (normale Handelsrechnung).
+     * 381 - (Gutschrift / Credit Note),
+     * 384 - (korrigierte Rechnung)
+     * 389 - (Selbstfakturierte Rechnung). -->
+     */
+    @Override
+    public void setInvoiceTypeCode(String value) {
+        super.setInvoiceTypeCode(value);
+        Element element = findOrCreateChildNode(exchangedDocument, EInvoiceNS.RAM, "TypeCode");
         element.setTextContent(value);
     }
 

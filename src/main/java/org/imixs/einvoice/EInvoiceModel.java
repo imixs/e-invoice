@@ -41,6 +41,7 @@ public abstract class EInvoiceModel {
     private Element root;
     // elements
     private String id = null;
+    private String invoiceTypeCode = null;
     private String buyerReference = null;
     private String orderReferenceId = null; // Order-ID
     private LocalDate issueDateTime = null;
@@ -100,6 +101,14 @@ public abstract class EInvoiceModel {
 
     public void setId(String value) {
         id = value;
+    }
+
+    public String getInvoiceTypeCode() {
+        return invoiceTypeCode;
+    }
+
+    public void setInvoiceTypeCode(String invoiceTypeCode) {
+        this.invoiceTypeCode = invoiceTypeCode;
     }
 
     public LocalDate getIssueDateTime() {
