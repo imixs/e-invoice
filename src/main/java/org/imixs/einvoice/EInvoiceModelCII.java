@@ -469,6 +469,29 @@ public class EInvoiceModelCII extends EInvoiceModel {
     }
 
     /**
+     * Sets the actual delivery date (BT-72).
+     * <p>
+     * <ram:ActualDeliverySupplyChainEvent>
+     * <ram:OccurrenceDateTime>
+     * <udt:DateTimeString format="102">20261008</udt:DateTimeString>
+     * </ram:OccurrenceDateTime>
+     * </ram:ActualDeliverySupplyChainEvent>
+     * 
+     * @param value the delivery date
+     */
+    public void setDeliveryDate(LocalDate value) {
+        if (value == null) {
+            return;
+        }
+        Element event = findOrCreateChildNode(applicableHeaderTradeDelivery, EInvoiceNS.RAM,
+                "ActualDeliverySupplyChainEvent");
+        Element occurrence = findOrCreateChildNode(event, EInvoiceNS.RAM, "OccurrenceDateTime");
+        Element dateTimeElement = findOrCreateChildNode(occurrence, EInvoiceNS.UDT, "DateTimeString");
+        dateTimeElement.setAttribute("format", "102");
+        dateTimeElement.setTextContent(DateTimeFormatter.ofPattern("yyyyMMdd").format(value));
+    }
+
+    /**
      * Updates or creates a trade party in the model and XML structure
      * 
      * @param newParty the trade party to be set
@@ -748,6 +771,43 @@ public class EInvoiceModelCII extends EInvoiceModel {
                 "GrandTotalAmount", grand.toPlainString());
         updateElementValue(specifiedTradeSettlementHeaderMonetarySummation, EInvoiceNS.RAM,
                 "DuePayableAmount", grand.toPlainString());
+    }
+
+    /**
+     * Sets the electronic address of the buyer (BT-49).
+     * <p>
+     * The element must be placed after PostalTradeAddress and before
+     * SpecifiedTaxRegistration to comply with the CII schema sequence.
+     * 
+     * <ram:URIUniversalCommunication>
+     * <ram:URIID schemeID="EM">invoice@example.com</ram:URIID>
+     * </ram:URIUniversalCommunication>
+     * 
+     * @param schemeId the electronic address scheme (e.g. "EM" for e-mail)
+     * @param address  the electronic address
+     */
+    public void setBuyerElectronicAddress(String schemeId, String address) {
+        if (address == null || address.isEmpty()) {
+            return;
+        }
+        Element buyer = findChildNode(applicableHeaderTradeAgreement, EInvoiceNS.RAM, "BuyerTradeParty");
+        if (buyer == null) {
+            return;
+        }
+        Element uriCommunication = findChildNode(buyer, EInvoiceNS.RAM, "URIUniversalCommunication");
+        if (uriCommunication == null) {
+            Element taxRegistration = findChildNode(buyer, EInvoiceNS.RAM, "SpecifiedTaxRegistration");
+            if (taxRegistration != null) {
+                uriCommunication = createChildNode(buyer, EInvoiceNS.RAM, "URIUniversalCommunication",
+                        taxRegistration);
+            } else {
+                uriCommunication = createChildNode(buyer, EInvoiceNS.RAM, "URIUniversalCommunication");
+            }
+        }
+        Element uriId = updateElementValue(uriCommunication, EInvoiceNS.RAM, "URIID", address);
+        if (uriId != null) {
+            uriId.setAttribute("schemeID", schemeId);
+        }
     }
 
 }
