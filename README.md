@@ -272,6 +272,8 @@ You can use the
 [Online eInvoice Validator](https://www.itb.ec.europa.eu/invoice/upload)
 to test an e-invoice document.
 
+Also see the section [Validate XRechnung](./src/test/resources/XRechnung/README.md)
+
 ## How to Join this Project
 
 We maintain Imixs e-invoice as an open source project on GitHub and welcome

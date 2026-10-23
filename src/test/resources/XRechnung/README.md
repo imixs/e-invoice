@@ -29,7 +29,7 @@ The [KoSIT Validator](https://github.com/itplr-kosit/validator) is the reference
 ### Run
 
 ```
-java -jar validator-<version>-standalone.jar \
+java -jar validator-1.6.3-standalone.jar \
   -s scenarios.xml \
   -r ./<config-dir> \
   -o ./reports \
@@ -41,6 +41,12 @@ java -jar validator-<version>-standalone.jar \
 - `-o` output directory for the generated reports
 
 Run `java -jar validator-<version>-standalone.jar --help` for all options.
+
+**Example:**
+
+```
+java -jar validator-1.6.3-standalone.jar -s scenarios.xml -r "$PWD" -o ./reports factur-x.xml
+```
 
 ### Reading the result
 
